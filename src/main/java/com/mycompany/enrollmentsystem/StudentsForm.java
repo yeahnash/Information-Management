@@ -226,7 +226,16 @@ public class StudentsForm extends javax.swing.JFrame {
     private void studGenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_studGenderActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_studGenderActionPerformed
+    private void studTableMouseClicked(java.awt.event.MouseEvent evt) {                                       
+       int[] selectRow = studTable.getSelectedRows();
+       stdid =(String) studTable.getValueAt(selectRow[0],0);
+       studID.setText(stdid);
 
+       String sname=(String) studTable.getValueAt(selectRow[0],1);
+       studName.setText(sname);
+       
+       
+    } 
     private void savebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebtnActionPerformed
         // TODO add your handling code here:
         Students b = new Students();

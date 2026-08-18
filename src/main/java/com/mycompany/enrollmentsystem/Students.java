@@ -12,11 +12,16 @@ public class Students {
     public void newstudent(int studID, String studName, String studAdd, String studCrs, String studGender, String yrLvl){
         String query = "insert into Students values ("+ studID + ",'"+ studName +"','"+ studAdd );
         b.st.executeUpdate(query);
+        try {
+            
+        } catch (Exception e) {
+        }
     }
     public void delete_student(){
         
     }
     public void update_student(){
-        
+        EnrollmentSystem b = new EnrollmentSystem();
+        b.DBConnect();
     }
 }
