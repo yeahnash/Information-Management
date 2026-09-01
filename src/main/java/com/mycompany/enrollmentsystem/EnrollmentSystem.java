@@ -22,7 +22,7 @@ public class EnrollmentSystem {
 
     public static void main(String[] args) {
         StudentsForm a = new StudentsForm();
-        a.showrecords();
+        a.showRecords();
         a.setVisible(true);
     }
     
@@ -38,10 +38,9 @@ public class EnrollmentSystem {
 
           System.out.println("Connected to database:");
 
-          }catch (Exception ex) {
+          }catch (Exception e) {
 
-          System.out.print(ex);    
-
+          System.out.print(e);    
      }
     return true;
     }

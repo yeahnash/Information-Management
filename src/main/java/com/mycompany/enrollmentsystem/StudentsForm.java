@@ -12,8 +12,15 @@ import javax.swing.table.DefaultTableModel;
  * @author ychiong
  */
 public class StudentsForm extends javax.swing.JFrame {
-    public void showrecords(){
+    String stdID;
+    String sName;
+    String sAdd;
+    String sCourse;
+    String sGender;
+    String sYrLvl;
+    public void showRecords(){
         DefaultTableModel tblmodel = (DefaultTableModel) studTable.getModel();
+        
         tblmodel.setRowCount(0);
         EnrollmentSystem b = new EnrollmentSystem();
         b.DBConnect();
@@ -33,8 +40,9 @@ public class StudentsForm extends javax.swing.JFrame {
                 String[] item = {i,c,d,t,g,y};
                 tblmodel.addRow(item);
             }
-        }catch (Exception ex){
+        }catch (Exception e){
             System.out.println("Not success with SQL");
+            e.printStackTrace();
         }
     }
     
@@ -45,6 +53,7 @@ public class StudentsForm extends javax.swing.JFrame {
      */
     public StudentsForm() {
         initComponents();
+        showRecords();
     }
 
     /**
@@ -118,6 +127,11 @@ public class StudentsForm extends javax.swing.JFrame {
         editbtn.setText("Edit");
 
         deletebtn.setText("Delete");
+        deletebtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                deletebtnMousePressed(evt);
+            }
+        });
         deletebtn.addActionListener(this::deletebtnActionPerformed);
 
         jLabel2.setText("ID");
@@ -167,13 +181,13 @@ public class StudentsForm extends javax.swing.JFrame {
                                 .addComponent(jLabel6)
                                 .addComponent(jLabel7))
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(studID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(studName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(studAdd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(studCrs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(studGender, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(yrLvl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(studName)
+                                .addComponent(studAdd)
+                                .addComponent(studCrs)
+                                .addComponent(studGender)
+                                .addComponent(yrLvl)
+                                .addComponent(studID)))
                         .addComponent(savebtn, javax.swing.GroupLayout.Alignment.TRAILING)
                         .addComponent(editbtn, javax.swing.GroupLayout.Alignment.TRAILING)
                         .addComponent(deletebtn, javax.swing.GroupLayout.Alignment.TRAILING))
@@ -256,27 +270,47 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void searchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_searchKeyPressed
         // TODO add your handling code here:
-        showrecords();
+        showRecords();
     }//GEN-LAST:event_searchKeyPressed
 
     private void studGenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_studGenderActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_studGenderActionPerformed
     private void studTableMouseClicked(java.awt.event.MouseEvent evt) {                                       
-       int[] selectRow = studTable.getSelectedRows();
-       stdid =(String) studTable.getValueAt(selectRow[0],0);
-       studID.setText(stdid);
-
-       String sname=(String) studTable.getValueAt(selectRow[0],1);
-       studName.setText(sname);
+       int selectedRow = studTable.getSelectedRow();
        
-       
+        if (selectedRow < 0) return;
+        
+        stdID = (String) studTable.getValueAt(selectedRow, 0);
+        studID.setText(stdID);
+        
+        sName = (String) studTable.getValueAt(selectedRow, 1);
+        studName.setText(sName);
+        
+        sAdd = (String) studTable.getValueAt(selectedRow, 2);
+        studAdd.setText(sAdd);
+        
+        sCourse = (String) studTable.getValueAt(selectedRow, 3);
+        studCrs.setText(sCourse);
+        
+        sGender = (String) studTable.getValueAt(selectedRow, 4);
+        studGender.setText(sGender);
+        
+        sYrLvl = (String) studTable.getValueAt(selectedRow, 5);
+        yrLvl.setText(sYrLvl);
     } 
     private void savebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebtnActionPerformed
         // TODO add your handling code here:
         Students b = new Students();
-        b.delete_student(Integer.parseInt(studID.getText()));
-        showrecords();
+        b.newstudent(
+                Integer.parseInt(studID.getText()),
+                studName.getText(),
+                studAdd.getText(),
+                studCrs.getText(),
+                studGender.getText(),
+                yrLvl.getText()
+        );
+        showRecords();
         
     }//GEN-LAST:event_savebtnActionPerformed
     private void messagebox(String msg, String titlebar){
@@ -289,12 +323,16 @@ public class StudentsForm extends javax.swing.JFrame {
             messagebox("Select a student to delete first", "Delete");
         else
             b.delete_student(Integer.parseInt(studID.getText()));
-        showrecords();
+        showRecords();
     }//GEN-LAST:event_deletebtnActionPerformed
 
     private void enrollbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enrollbtnActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_enrollbtnActionPerformed
+
+    private void deletebtnMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deletebtnMousePressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_deletebtnMousePressed
 
     /**
      * @param args the command line arguments

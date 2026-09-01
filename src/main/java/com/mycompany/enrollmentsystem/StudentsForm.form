@@ -37,13 +37,13 @@
                               <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="studID" min="-2" max="-2" attributes="0"/>
-                              <Component id="studName" min="-2" max="-2" attributes="0"/>
-                              <Component id="studAdd" min="-2" max="-2" attributes="0"/>
-                              <Component id="studCrs" min="-2" max="-2" attributes="0"/>
-                              <Component id="studGender" min="-2" max="-2" attributes="0"/>
-                              <Component id="yrLvl" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Component id="studName" max="32767" attributes="0"/>
+                              <Component id="studAdd" max="32767" attributes="0"/>
+                              <Component id="studCrs" max="32767" attributes="0"/>
+                              <Component id="studGender" max="32767" attributes="0"/>
+                              <Component id="yrLvl" max="32767" attributes="0"/>
+                              <Component id="studID" alignment="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <Component id="savebtn" alignment="1" min="-2" max="-2" attributes="0"/>
@@ -266,6 +266,7 @@
         <Property name="text" type="java.lang.String" value="Delete"/>
       </Properties>
       <Events>
+        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="deletebtnMousePressed"/>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deletebtnActionPerformed"/>
       </Events>
     </Component>
