@@ -10,13 +10,12 @@ package com.mycompany.enrollmentsystem;
  * @author Admin
  */
 public class Students {
-    public void newstudent(int studID, String studName, String studAdd, String studCrs, String studGender, String yrLvl){
+    public void newstudent(String studName, String studAdd, String studCrs, String studGender, String yrLvl){
         EnrollmentSystem b = new EnrollmentSystem();
         b.DBConnect();
         
         try {
-            String query = "INSERT INTO Students VALUES (" + 
-                    studID + ", '" + 
+            String query = "INSERT INTO Students " + "(studName, studAdd, studCrs, studGender, yrLvl) VALUES ('" + 
                     studName + "', '" + 
                     studAdd + "', '" + 
                     studCrs + "', '" + 

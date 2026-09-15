@@ -29,7 +29,7 @@ public class StudentsForm extends javax.swing.JFrame {
         if (searchText.equals("Search")) searchText = "";
         
         try{
-            String query = "SELECT * FROM students WHERE concat(studID, studName, studAdd, studCrs, studGender, yrLvl) like '%" + search.getText() + "%'";
+            String query = "SELECT * FROM students WHERE concat(studID, studName, studAdd, studCrs, studGender, yrLvl) like '%" + searchText + "%'";
             b.rs = b.st.executeQuery(query);
             System.out.println("Success with SQL!");
             
@@ -47,6 +47,16 @@ public class StudentsForm extends javax.swing.JFrame {
             System.out.print("NOT successful with SQL!");
             e.printStackTrace();
         }
+    }
+    public static int okcancel(String theMessage) {
+        int result = JOptionPane.showConfirmDialog(
+            null,
+            theMessage,
+            "Alert",
+            JOptionPane.OK_CANCEL_OPTION
+        );
+
+        return result;
     }
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(StudentsForm.class.getName());
@@ -89,6 +99,11 @@ public class StudentsForm extends javax.swing.JFrame {
         savebtn = new javax.swing.JButton();
         editbtn = new javax.swing.JButton();
         deletebtn = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        showsubjTable = new javax.swing.JTable();
+        enrollsubjbtn = new javax.swing.JButton();
+        dropsubjbtn = new javax.swing.JButton();
+        jLabel7 = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         menubtn = new javax.swing.JMenu();
         subjectbtn = new javax.swing.JMenuItem();
@@ -127,6 +142,8 @@ public class StudentsForm extends javax.swing.JFrame {
 
         label.setText("Search");
 
+        studID.setEnabled(false);
+
         jLabel1.setText("ID");
 
         jLabel2.setText("Name");
@@ -160,6 +177,32 @@ public class StudentsForm extends javax.swing.JFrame {
         });
         deletebtn.addActionListener(this::deletebtnActionPerformed);
 
+        showsubjTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
+            },
+            new String [] {
+                "subjID", "subjCode", "subjDesc", "subjUnits", "subjSched"
+            }
+        ));
+        showsubjTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                showsubjTableMouseClicked(evt);
+            }
+        });
+        jScrollPane2.setViewportView(showsubjTable);
+
+        enrollsubjbtn.setText("Enroll Subject");
+        enrollsubjbtn.addActionListener(this::enrollsubjbtnActionPerformed);
+
+        dropsubjbtn.setText("Drop Subject");
+        dropsubjbtn.addActionListener(this::dropsubjbtnActionPerformed);
+
+        jLabel7.setText("Enrolled Subjects");
+
         menubtn.setText("Menu");
 
         subjectbtn.setText("Subjects");
@@ -179,57 +222,66 @@ public class StudentsForm extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(21, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(studID, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(studName, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(studAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(studCrs, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(studGender, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(yrLvl, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(savebtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(editbtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(deletebtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(22, 22, 22)
+                .addGap(39, 39, 39)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(studID, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(studName, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(studAdd, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(studCrs, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(studGender, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(yrLvl, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(savebtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(editbtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(deletebtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(22, 22, 22))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(enrollsubjbtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(dropsubjbtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jScrollPane1)
-                        .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, 755, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(search, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(label)))
-                .addContainerGap())
+                        .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 755, Short.MAX_VALUE)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(search, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(label))
+                        .addComponent(jScrollPane2)))
+                .addGap(37, 37, 37))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(1, 1, 1)
+                .addComponent(title, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(search, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(label))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 327, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(studID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -254,13 +306,25 @@ public class StudentsForm extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(yrLvl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel6))
-                        .addGap(41, 41, 41)
+                        .addGap(18, 18, 18)
                         .addComponent(savebtn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(editbtn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(deletebtn)))
-                .addGap(21, 21, 21))
+                        .addComponent(deletebtn))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(100, 100, 100)
+                        .addComponent(enrollsubjbtn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(dropsubjbtn)))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         pack();
@@ -270,7 +334,6 @@ public class StudentsForm extends javax.swing.JFrame {
         Students c = new Students();
         
         c.newstudent(
-        Integer.parseInt(studID.getText()),
         studName.getText(),
         studAdd.getText(),
         studCrs.getText(),
@@ -282,6 +345,35 @@ public class StudentsForm extends javax.swing.JFrame {
     private void messagebox(String msg, String titlebar){
      JOptionPane.showMessageDialog(null,msg,titlebar,JOptionPane.INFORMATION_MESSAGE);   
      }
+    private void showEnrollRec() {
+    DefaultTableModel tblmodel = (DefaultTableModel) showsubjTable.getModel();
+    tblmodel.setRowCount(0);
+    
+    EnrollmentSystem b = new EnrollmentSystem();
+    b.DBConnect();
+    
+    try {
+        String query = "SELECT * FROM subjects WHERE subjID IN " +
+                       "(SELECT subjID FROM enroll WHERE studID = " + stdID + ")";
+        
+        b.rs = b.st.executeQuery(query);
+        
+        while (b.rs.next()) {
+            String i = b.rs.getString("subjID");
+            String c = b.rs.getString("subjCode");
+            String d = b.rs.getString("subjDesc");
+            String t = b.rs.getString("subjUnits");
+            String g = b.rs.getString("subjSched");
+            
+            String[] item = {i, c, d, t, g};
+            tblmodel.addRow(item);
+        }
+        
+    } catch (Exception ex) {
+        System.out.println("Not successful!");
+        ex.printStackTrace();
+    }
+}
     private void deletebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebtnActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_deletebtnActionPerformed
@@ -324,6 +416,8 @@ public class StudentsForm extends javax.swing.JFrame {
         
         sYrLvl = (String) studTable.getValueAt(selectedRow, 5);
         yrLvl.setText(sYrLvl);
+        
+        showEnrollRec();
     }//GEN-LAST:event_studTableMouseClicked
 
     private void editbtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_editbtnMouseClicked
@@ -354,7 +448,7 @@ public class StudentsForm extends javax.swing.JFrame {
         // TODO add your handling code here:
         SubjectsForm b = new SubjectsForm();
         b.setVisible(true);
-        this.dispose();
+        
         b.showRecords();
     }//GEN-LAST:event_subjectbtnActionPerformed
 
@@ -362,9 +456,72 @@ public class StudentsForm extends javax.swing.JFrame {
         // TODO add your handling code here:
         TeachersForm b = new TeachersForm();
         b.setVisible(true);
-        this.dispose();
+        
         b.showRecords();
     }//GEN-LAST:event_teachersbtnActionPerformed
+
+    private void enrollsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enrollsubjbtnActionPerformed
+        // TODO add your handling code here:
+        Enrolled a = new Enrolled();
+    
+        int i = okcancel(
+            "Enroll student ID: " + stdID +
+            " to subject ID: " + a.getsubjID()
+        );
+
+        if (i == 0) {
+
+            String result = a.enrollStud(Integer.parseInt(stdID));
+
+            if (result.equals("Student is already Enrolled in this subject.")) {
+                messagebox(result, "Enrollment Failed");
+            } else {
+                messagebox(result, "Success!!");
+                showEnrollRec();
+            }
+
+        } else {
+            messagebox("Cancel Enroll " + stdID, "Enroll");
+        }
+    }//GEN-LAST:event_enrollsubjbtnActionPerformed
+
+    private void showsubjTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showsubjTableMouseClicked
+        // TODO add your handling code here:
+        int selectedRow = showsubjTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            return;
+        }
+
+        Object value = showsubjTable.getValueAt(selectedRow, 0);
+
+        if (value == null) {
+            return;
+        }
+
+        int selectedSubjID = Integer.parseInt(value.toString());
+
+        System.out.println("Selected Subject ID: " + selectedSubjID);
+
+        Enrolled a = new Enrolled();
+        a.setsubjID(selectedSubjID);
+    }//GEN-LAST:event_showsubjTableMouseClicked
+
+    private void dropsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dropsubjbtnActionPerformed
+        // TODO add your handling code here:
+        Enrolled a = new Enrolled();
+    
+        String result = a.dropSubject(Integer.parseInt(stdID));
+
+        if (result.equals("Drop Failed")) {
+            messagebox(result, "Drop Failed");
+        } else if (result.equals("Student is not Enrolled in this subject.")) {
+            messagebox(result, "Drop Failed");
+        } else {
+            messagebox(result, "Success!!");
+            showEnrollRec();
+        }
+    }//GEN-LAST:event_dropsubjbtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -393,19 +550,24 @@ public class StudentsForm extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton deletebtn;
+    private javax.swing.JButton dropsubjbtn;
     private javax.swing.JButton editbtn;
+    private javax.swing.JButton enrollsubjbtn;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel label;
     private javax.swing.JMenu menubtn;
     private javax.swing.JButton savebtn;
     private javax.swing.JTextField search;
+    private javax.swing.JTable showsubjTable;
     private javax.swing.JTextField studAdd;
     private javax.swing.JTextField studCrs;
     private javax.swing.JTextField studGender;
@@ -418,3 +580,4 @@ public class StudentsForm extends javax.swing.JFrame {
     private javax.swing.JTextField yrLvl;
     // End of variables declaration//GEN-END:variables
 }
+

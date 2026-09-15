@@ -10,13 +10,12 @@ package com.mycompany.enrollmentsystem;
  * @author Admin
  */
 public class Subjects {
-    public void newsubject(int subjID, String subjCode, String subjDesc, int subjUnits, String subjSched){
+    public void newsubject(String subjCode, String subjDesc, int subjUnits, String subjSched){
         EnrollmentSystem b = new EnrollmentSystem();
         b.DBConnect();
         
         try {
-            String query = "INSERT INTO subjects VALUES (" + 
-                    subjID + ", '" + 
+            String query = "INSERT INTO Subjects " + "(subjCode, subjDesc, subjUnits, subjSched) VALUES ('" + 
                     subjCode + "', '" + 
                     subjDesc + "', '" + 
                     subjUnits + "', '" + 
