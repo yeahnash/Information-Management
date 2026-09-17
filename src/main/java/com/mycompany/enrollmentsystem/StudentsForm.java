@@ -66,8 +66,12 @@ public class StudentsForm extends javax.swing.JFrame {
      */
     public StudentsForm() {
         initComponents();
+
+        DefaultTableModel tblmodel =
+                (DefaultTableModel) showsubjTable.getModel();
+        tblmodel.setRowCount(0);
+
         showRecords();
-      
     }
 
     /**

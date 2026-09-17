@@ -55,8 +55,12 @@ public class SubjectsForm extends javax.swing.JFrame {
      */
     public SubjectsForm() {
         initComponents();
+
+        DefaultTableModel tblmodel =
+                (DefaultTableModel) jTable1.getModel();
+        tblmodel.setRowCount(0);
+
         showRecords();
-      
     }
 
     /**

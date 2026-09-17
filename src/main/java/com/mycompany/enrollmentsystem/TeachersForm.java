@@ -17,7 +17,7 @@ public class TeachersForm extends javax.swing.JFrame {
     String tchAdd;
     String tchContact;
     String tchStatus;
-    
+    int selectedSubjID = 0;
     public void showRecords(){
         DefaultTableModel tblmodel = (DefaultTableModel) tchTable.getModel();
     
@@ -95,8 +95,13 @@ public class TeachersForm extends javax.swing.JFrame {
      */
     public TeachersForm() {
         initComponents();
+
+        DefaultTableModel tblmodel =
+                (DefaultTableModel) showsubjTable.getModel();
+
+        tblmodel.setRowCount(0);
+
         showRecords();
-      
     }
 
     /**
@@ -375,14 +380,15 @@ public class TeachersForm extends javax.swing.JFrame {
 
     private void savebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savebtnActionPerformed
         Teachers c = new Teachers();
-        
+
         c.newteacher(
-        tName.getText(),
-        tAdd.getText(),
-        tDept.getText(),
-        tContact.getText(),
-        tStatus.getText()
+            tName.getText(),
+            tDept.getText(),
+            tAdd.getText(),
+            tContact.getText(),
+            tStatus.getText()
         );
+
         showRecords();
     }//GEN-LAST:event_savebtnActionPerformed
     private void messagebox(String msg, String titlebar){
@@ -390,6 +396,55 @@ public class TeachersForm extends javax.swing.JFrame {
      }
     private void deletebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebtnActionPerformed
         // TODO add your handling code here:
+        Teachers c = new Teachers();
+
+        if ("".equals(tID.getText())) {
+            messagebox("Select a teacher to delete first.", "Delete Teacher");
+            return;
+        }
+
+        int teacherID = Integer.parseInt(tID.getText());
+
+        int confirm = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to delete Teacher ID: " + teacherID + "?",
+                "Delete Teacher",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+
+            boolean deleted = c.delete_teacher(teacherID);
+
+            if (deleted) {
+                messagebox("Teacher deleted successfully!", "Success!!");
+
+                // Clear the text fields
+                tID.setText("");
+                tName.setText("");
+                tDept.setText("");
+                tAdd.setText("");
+                tContact.setText("");
+                tStatus.setText("");
+
+                // Clear selected teacher
+                tchID = "";
+
+                // Clear assigned subjects table
+                DefaultTableModel tblmodel =
+                        (DefaultTableModel) showsubjTable.getModel();
+                tblmodel.setRowCount(0);
+
+                // Refresh teacher table
+                showRecords();
+
+            } else {
+                messagebox("Teacher could not be deleted.", "Delete Teacher");
+            }
+
+        } else {
+            messagebox("Delete cancelled.", "Delete Teacher");
+        }
     }//GEN-LAST:event_deletebtnActionPerformed
 
     private void tchTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tchTableMouseClicked
@@ -512,7 +567,7 @@ public class TeachersForm extends javax.swing.JFrame {
     private void showsubjTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showsubjTableMouseClicked
         // TODO add your handling code here:
         Assign a = new Assign();
-    
+
         int selectedRow = showsubjTable.getSelectedRow();
 
         if (selectedRow < 0) {
@@ -525,7 +580,7 @@ public class TeachersForm extends javax.swing.JFrame {
             return;
         }
 
-        int selectedSubjID = Integer.parseInt(value.toString());
+        selectedSubjID = Integer.parseInt(value.toString());
 
         System.out.println("Selected Subject ID: " + selectedSubjID);
 

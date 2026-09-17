@@ -43,9 +43,9 @@ public class Assign extends EnrollmentSystem {
     public String deleteSubject(int tID){
         DBConnect();
 
-        String query = "delete from assign "
-                + "where TID = " + tID
-                + " and SubjID = " + subjID;
+        String query = "DELETE FROM assign "
+                + "WHERE TID = " + tID
+                + " AND SubjID = " + subjID;
 
         System.out.println("tchrid = " + tID);
         System.out.println("subjID = " + subjID);
@@ -56,9 +56,8 @@ public class Assign extends EnrollmentSystem {
 
             System.out.println("rows deleted = " + rows);
 
-            if(rows > 0){
-                return "Subject " + subjID
-                        + " unassigned from teacher " + tID;
+            if (rows > 0) {
+                return "Subject " + subjID + " unassigned from teacher " + tID;
             } else {
                 return "Teacher is not assigned to this subject.";
             }

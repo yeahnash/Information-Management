@@ -33,17 +33,34 @@ public class Teachers {
         }
     }
     
-    public void delete_teacher(int tID){
+    public boolean delete_teacher(int tID){
         EnrollmentSystem b = new EnrollmentSystem();
         b.DBConnect();
-        String query = "delete from teachers where tID =" + tID;
-        
+
         try {
-            int rows = b.st.executeUpdate(query);
+            // First remove the teacher's subject assignments
+            String deleteAssignments =
+                    "DELETE FROM assign WHERE TID = " + tID;
+
+            b.st.executeUpdate(deleteAssignments);
+
+            // Then delete the teacher
+            String deleteTeacher =
+                    "DELETE FROM teachers WHERE TID = " + tID;
+
+            int rows = b.st.executeUpdate(deleteTeacher);
+
+            if (rows > 0) {
+                System.out.println("Teacher deleted successfully!");
+                return true;
+            }
+
         } catch (Exception e) {
             System.out.println("Not successful!");
             e.printStackTrace();
         }
+
+        return false;
     }
     
     public void edit_teacher(int tID, String tName, String tDept, String tAdd, String tContact, String tStatus){
