@@ -27,6 +27,31 @@
             </MenuItem>
           </SubComponents>
         </Menu>
+        <Menu class="javax.swing.JMenu" name="databasesbtn">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Databases"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="firstsemesterbtn">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="First Semester"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="firstsemesterbtnActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="secondsemesterbtn">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Second Semester"/>
+              </Properties>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="summersemesterbtn">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Summer Semester"/>
+              </Properties>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
       </SubComponents>
     </Menu>
   </NonVisualComponents>

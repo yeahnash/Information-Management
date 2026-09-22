@@ -112,6 +112,10 @@ public class StudentsForm extends javax.swing.JFrame {
         menubtn = new javax.swing.JMenu();
         subjectbtn = new javax.swing.JMenuItem();
         teachersbtn = new javax.swing.JMenuItem();
+        databasesbtn = new javax.swing.JMenu();
+        firstsemesterbtn = new javax.swing.JMenuItem();
+        secondsemesterbtn = new javax.swing.JMenuItem();
+        summersemesterbtn = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -219,6 +223,20 @@ public class StudentsForm extends javax.swing.JFrame {
 
         jMenuBar1.add(menubtn);
 
+        databasesbtn.setText("Databases");
+
+        firstsemesterbtn.setText("First Semester");
+        firstsemesterbtn.addActionListener(this::firstsemesterbtnActionPerformed);
+        databasesbtn.add(firstsemesterbtn);
+
+        secondsemesterbtn.setText("Second Semester");
+        databasesbtn.add(secondsemesterbtn);
+
+        summersemesterbtn.setText("Summer Semester");
+        databasesbtn.add(summersemesterbtn);
+
+        jMenuBar1.add(databasesbtn);
+
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -317,7 +335,6 @@ public class StudentsForm extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(deletebtn))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jLabel7)
@@ -448,22 +465,6 @@ public class StudentsForm extends javax.swing.JFrame {
         showRecords();
     }//GEN-LAST:event_searchKeyPressed
 
-    private void subjectbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_subjectbtnActionPerformed
-        // TODO add your handling code here:
-        SubjectsForm b = new SubjectsForm();
-        b.setVisible(true);
-        
-        b.showRecords();
-    }//GEN-LAST:event_subjectbtnActionPerformed
-
-    private void teachersbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_teachersbtnActionPerformed
-        // TODO add your handling code here:
-        TeachersForm b = new TeachersForm();
-        b.setVisible(true);
-        
-        b.showRecords();
-    }//GEN-LAST:event_teachersbtnActionPerformed
-
     private void enrollsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enrollsubjbtnActionPerformed
         // TODO add your handling code here:
         Enrolled a = new Enrolled();
@@ -527,6 +528,26 @@ public class StudentsForm extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_dropsubjbtnActionPerformed
 
+    private void teachersbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_teachersbtnActionPerformed
+        // TODO add your handling code here:
+        TeachersForm b = new TeachersForm();
+        b.setVisible(true);
+
+        b.showRecords();
+    }//GEN-LAST:event_teachersbtnActionPerformed
+
+    private void subjectbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_subjectbtnActionPerformed
+        // TODO add your handling code here:
+        SubjectsForm b = new SubjectsForm();
+        b.setVisible(true);
+
+        b.showRecords();
+    }//GEN-LAST:event_subjectbtnActionPerformed
+
+    private void firstsemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firstsemesterbtnActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_firstsemesterbtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -553,10 +574,12 @@ public class StudentsForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu databasesbtn;
     private javax.swing.JButton deletebtn;
     private javax.swing.JButton dropsubjbtn;
     private javax.swing.JButton editbtn;
     private javax.swing.JButton enrollsubjbtn;
+    private javax.swing.JMenuItem firstsemesterbtn;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -571,6 +594,7 @@ public class StudentsForm extends javax.swing.JFrame {
     private javax.swing.JMenu menubtn;
     private javax.swing.JButton savebtn;
     private javax.swing.JTextField search;
+    private javax.swing.JMenuItem secondsemesterbtn;
     private javax.swing.JTable showsubjTable;
     private javax.swing.JTextField studAdd;
     private javax.swing.JTextField studCrs;
@@ -579,6 +603,7 @@ public class StudentsForm extends javax.swing.JFrame {
     private javax.swing.JTextField studName;
     private javax.swing.JTable studTable;
     private javax.swing.JMenuItem subjectbtn;
+    private javax.swing.JMenuItem summersemesterbtn;
     private javax.swing.JMenuItem teachersbtn;
     private javax.swing.JLabel title;
     private javax.swing.JTextField yrLvl;
