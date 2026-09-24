@@ -546,6 +546,8 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void firstsemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firstsemesterbtnActionPerformed
         // TODO add your handling code here:
+        EnrollmentSystem a = new EnrollmentSystem();
+        messagebox("Created " + a.newdb("1st") + " DB.", "Confirmation");
     }//GEN-LAST:event_firstsemesterbtnActionPerformed
 
     /**
