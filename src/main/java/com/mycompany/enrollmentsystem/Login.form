@@ -16,7 +16,7 @@
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem1">
               <Properties>
-                <Property name="text" type="java.lang.String" value="jMenuItem1"/>
+                <Property name="text" type="java.lang.String" value="First Semester"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem1ActionPerformed"/>
@@ -24,12 +24,12 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem2">
               <Properties>
-                <Property name="text" type="java.lang.String" value="jMenuItem2"/>
+                <Property name="text" type="java.lang.String" value="Second Semester"/>
               </Properties>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItem3">
               <Properties>
-                <Property name="text" type="java.lang.String" value="jMenuItem3"/>
+                <Property name="text" type="java.lang.String" value="Summer Semester"/>
               </Properties>
             </MenuItem>
           </SubComponents>
@@ -68,21 +68,30 @@
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="273" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="password" max="32767" attributes="0"/>
-                          <Component id="username" pref="169" max="32767" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="showPassword" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="245" max="-2" attributes="0"/>
+                      <Component id="loginlabel" min="-2" pref="206" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="323" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="337" max="-2" attributes="0"/>
                       <Component id="loginbtn" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="245" max="-2" attributes="0"/>
-                      <Component id="loginlabel" min="-2" pref="206" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="273" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="jComboBox1" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="submitDBbtn" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="password" max="32767" attributes="0"/>
+                                  <Component id="username" pref="169" max="32767" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="showPassword" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
                   </Group>
               </Group>
               <EmptySpace pref="194" max="32767" attributes="0"/>
@@ -103,7 +112,12 @@
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Component id="loginbtn" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="-2" pref="209" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="jComboBox1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="submitDBbtn" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace min="-2" pref="142" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -123,6 +137,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Log in"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loginbtnActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="loginlabel">
       <Properties>
@@ -140,6 +157,26 @@
         </Property>
         <Property name="text" type="java.lang.String" value="Show Password"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="jComboBox1">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="Databases"/>
+          </StringArray>
+        </Property>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JButton" name="submitDBbtn">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Submit"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="submitDBbtnActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

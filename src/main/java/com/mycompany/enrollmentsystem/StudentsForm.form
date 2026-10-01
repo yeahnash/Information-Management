@@ -31,6 +31,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Databases"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="databasesbtnActionPerformed"/>
+          </Events>
           <SubComponents>
             <MenuItem class="javax.swing.JMenuItem" name="firstsemesterbtn">
               <Properties>
@@ -44,11 +47,17 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="Second Semester"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="secondsemesterbtnActionPerformed"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="summersemesterbtn">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Summer Semester"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="summersemesterbtnActionPerformed"/>
+              </Events>
             </MenuItem>
           </SubComponents>
         </Menu>

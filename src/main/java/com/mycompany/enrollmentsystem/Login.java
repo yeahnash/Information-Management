@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.mycompany.enrollmentsystem;
+import java.util.ArrayList;
 
 /**
  *
@@ -17,6 +18,7 @@ public class Login extends javax.swing.JFrame {
      */
     public Login() {
         initComponents();
+        
 
         // =========================
         // USERNAME PLACEHOLDER
@@ -111,6 +113,7 @@ public class Login extends javax.swing.JFrame {
             }
         });
     }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -126,6 +129,8 @@ public class Login extends javax.swing.JFrame {
         loginbtn = new javax.swing.JButton();
         loginlabel = new javax.swing.JLabel();
         showPassword = new javax.swing.JCheckBox();
+        jComboBox1 = new javax.swing.JComboBox<>();
+        submitDBbtn = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -141,6 +146,7 @@ public class Login extends javax.swing.JFrame {
         username.addActionListener(this::usernameActionPerformed);
 
         loginbtn.setText("Log in");
+        loginbtn.addActionListener(this::loginbtnActionPerformed);
 
         loginlabel.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
         loginlabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -149,19 +155,24 @@ public class Login extends javax.swing.JFrame {
         showPassword.setFont(new java.awt.Font("Segoe UI", 0, 10)); // NOI18N
         showPassword.setText("Show Password");
 
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Databases" }));
+
+        submitDBbtn.setText("Submit");
+        submitDBbtn.addActionListener(this::submitDBbtnActionPerformed);
+
         jMenu1.setText("Open");
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Databases");
 
-        jMenuItem1.setText("jMenuItem1");
+        jMenuItem1.setText("First Semester");
         jMenuItem1.addActionListener(this::jMenuItem1ActionPerformed);
         jMenu2.add(jMenuItem1);
 
-        jMenuItem2.setText("jMenuItem2");
+        jMenuItem2.setText("Second Semester");
         jMenu2.add(jMenuItem2);
 
-        jMenuItem3.setText("jMenuItem3");
+        jMenuItem3.setText("Summer Semester");
         jMenu2.add(jMenuItem3);
 
         jMenuBar1.add(jMenu2);
@@ -178,18 +189,24 @@ public class Login extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(273, 273, 273)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(password)
-                            .addComponent(username, javax.swing.GroupLayout.DEFAULT_SIZE, 169, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(showPassword))
+                        .addGap(245, 245, 245)
+                        .addComponent(loginlabel, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(323, 323, 323)
+                        .addGap(337, 337, 337)
                         .addComponent(loginbtn))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(245, 245, 245)
-                        .addComponent(loginlabel, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(273, 273, 273)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(submitDBbtn))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(password)
+                                    .addComponent(username, javax.swing.GroupLayout.DEFAULT_SIZE, 169, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(showPassword)))))
                 .addContainerGap(194, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -205,12 +222,20 @@ public class Login extends javax.swing.JFrame {
                     .addComponent(showPassword))
                 .addGap(18, 18, 18)
                 .addComponent(loginbtn)
-                .addGap(209, 209, 209))
+                .addGap(44, 44, 44)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(submitDBbtn))
+                .addGap(142, 142, 142))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void messagebox(String msg, String titlebar) {
+        javax.swing.JOptionPane.showMessageDialog(null, msg, titlebar, javax.swing.JOptionPane.INFORMATION_MESSAGE);   
+    }
+    
     private void passwordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_passwordActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_passwordActionPerformed
@@ -222,6 +247,195 @@ public class Login extends javax.swing.JFrame {
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginbtnActionPerformed
+        // TODO add your handling code here:
+        String user = username.getText().trim();
+        String pass = String.valueOf(password.getPassword()).trim();
+
+        // Check if username or password is empty
+        if (user.isEmpty() || user.equals("Username")
+                || pass.isEmpty() || pass.equals("Password")) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter your username and password.",
+                    "Login Failed",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        EnrollmentSystem sys = new EnrollmentSystem();
+
+        // Authenticate MySQL account
+        if (sys.DBConnect(user, pass, "")) {
+
+            EnrollmentSystem.currentUser = user;
+            EnrollmentSystem.currentPassword = pass;
+
+            // Determine user role
+            if (user.equalsIgnoreCase("root")) {
+                EnrollmentSystem.currentRole = "Admin";
+            } else if (user.startsWith("100")) {
+                EnrollmentSystem.currentRole = "Student";
+            } else if (user.startsWith("300")) {
+                EnrollmentSystem.currentRole = "Teacher";
+            } else {
+                EnrollmentSystem.currentRole = "Unknown";
+            }
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Login Success! Please select a semester database and click Submit.",
+                    "Authentication Successful",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE
+            );
+
+            /*
+             * TEMPORARY DATABASE LIST
+             *
+             * This part depends on how your EnrollmentSystem.getDatabases()
+             * is implemented.
+             */
+            jComboBox1.removeAllItems();
+
+            ArrayList<String> databases = sys.getDatabases();
+
+            
+            for (String dbName : databases) {
+                jComboBox1.addItem(dbName);
+            }
+
+            if (databases.isEmpty()) {
+
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "No semester databases found.",
+                        "No Databases Found",
+                        javax.swing.JOptionPane.WARNING_MESSAGE
+                );
+
+                return;
+            }
+
+        } else {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Invalid Username or Password!",
+                    "Login Failed",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+        }
+
+    }//GEN-LAST:event_loginbtnActionPerformed
+
+    private void submitDBbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitDBbtnActionPerformed
+        // TODO add your handling code here:
+        // Check if the user has logged in
+        if (EnrollmentSystem.currentUser == null
+                || EnrollmentSystem.currentUser.isEmpty()) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please login first!",
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+
+            return;
+        }
+
+        // Check if a database was selected
+        if (jComboBox1.getSelectedItem() == null) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a semester database.",
+                    "Error",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        String selectedDb =
+                jComboBox1.getSelectedItem().toString();
+
+        // Make sure the placeholder isn't selected
+        if (selectedDb.equals("Databases")
+                || selectedDb.equals("Item 1")
+                || selectedDb.equals("null")) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a valid semester database.",
+                    "Error",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        EnrollmentSystem sys = new EnrollmentSystem();
+
+        // Save selected database
+        sys.currentDB(selectedDb);
+
+        // Connect using logged-in user's credentials
+        if (sys.DBConnect(
+                EnrollmentSystem.currentUser,
+                EnrollmentSystem.currentPassword,
+                selectedDb)) {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Connected to " + selectedDb,
+                    "Database Selected",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE
+            );
+
+            if (EnrollmentSystem.currentRole.equals("Admin")) {
+
+                StudentsForm studentForm = new StudentsForm();
+                studentForm.setVisible(true);
+
+            } else if (EnrollmentSystem.currentRole.equals("Student")) {
+
+                StudentsForm studentForm = new StudentsForm();
+                studentForm.setVisible(true);
+
+            } else if (EnrollmentSystem.currentRole.equals("Teacher")) {
+
+                TeachersForm teacherForm = new TeachersForm();
+                teacherForm.setVisible(true);
+
+            } else {
+
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Unknown user role.",
+                        "Login Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                );
+
+                return;
+            }
+
+            this.dispose();
+
+        } else {
+
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "Access Denied to database: " + selectedDb,
+                    "Database Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }//GEN-LAST:event_submitDBbtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -249,6 +463,7 @@ public class Login extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -260,6 +475,7 @@ public class Login extends javax.swing.JFrame {
     private javax.swing.JLabel loginlabel;
     private javax.swing.JPasswordField password;
     private javax.swing.JCheckBox showPassword;
+    private javax.swing.JButton submitDBbtn;
     private javax.swing.JTextField username;
     // End of variables declaration//GEN-END:variables
 }

@@ -224,15 +224,18 @@ public class StudentsForm extends javax.swing.JFrame {
         jMenuBar1.add(menubtn);
 
         databasesbtn.setText("Databases");
+        databasesbtn.addActionListener(this::databasesbtnActionPerformed);
 
         firstsemesterbtn.setText("First Semester");
         firstsemesterbtn.addActionListener(this::firstsemesterbtnActionPerformed);
         databasesbtn.add(firstsemesterbtn);
 
         secondsemesterbtn.setText("Second Semester");
+        secondsemesterbtn.addActionListener(this::secondsemesterbtnActionPerformed);
         databasesbtn.add(secondsemesterbtn);
 
         summersemesterbtn.setText("Summer Semester");
+        summersemesterbtn.addActionListener(this::summersemesterbtnActionPerformed);
         databasesbtn.add(summersemesterbtn);
 
         jMenuBar1.add(databasesbtn);
@@ -538,10 +541,22 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void subjectbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_subjectbtnActionPerformed
         // TODO add your handling code here:
-        SubjectsForm b = new SubjectsForm();
-        b.setVisible(true);
+        EnrollmentSystem a = new EnrollmentSystem();
 
-        b.showRecords();
+        String dbName = a.newdb("1st");
+
+        if (dbName == null) {
+            messagebox(
+                "First Semester database already exists.",
+                "Database Exists"
+            );
+        } else {
+            messagebox(
+                "Created " + dbName + " DB.",
+                "Confirmation"
+            );
+        }
+        
     }//GEN-LAST:event_subjectbtnActionPerformed
 
     private void firstsemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firstsemesterbtnActionPerformed
@@ -549,6 +564,22 @@ public class StudentsForm extends javax.swing.JFrame {
         EnrollmentSystem a = new EnrollmentSystem();
         messagebox("Created " + a.newdb("1st") + " DB.", "Confirmation");
     }//GEN-LAST:event_firstsemesterbtnActionPerformed
+
+    private void databasesbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_databasesbtnActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_databasesbtnActionPerformed
+
+    private void secondsemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_secondsemesterbtnActionPerformed
+        // TODO add your handling code here:
+        EnrollmentSystem a = new EnrollmentSystem();
+        messagebox("Created " + a.newdb("2nd") + " DB.", "Confirmation");
+    }//GEN-LAST:event_secondsemesterbtnActionPerformed
+
+    private void summersemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_summersemesterbtnActionPerformed
+        // TODO add your handling code here:
+        EnrollmentSystem a = new EnrollmentSystem();
+        messagebox("Created " + a.newdb("Summer") + " DB.", "Confirmation");
+    }//GEN-LAST:event_summersemesterbtnActionPerformed
 
     /**
      * @param args the command line arguments
