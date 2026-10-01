@@ -18,45 +18,41 @@ public class TeachersForm extends javax.swing.JFrame {
     String tchContact;
     String tchStatus;
     int selectedSubjID = 0;
+    
     public void showRecords(){
         DefaultTableModel tblmodel = (DefaultTableModel) tchTable.getModel();
-    
         tblmodel.setRowCount(0);
 
         EnrollmentSystem b = new EnrollmentSystem();
-        b.DBConnect();
+        if (!b.DBConnect()) return;
 
         String searchText = search.getText();
+        if (searchText.equals("Search")) searchText = "";
 
-        if (searchText.equals("Search")) {
-            searchText = "";
-        }
+        String query = "SELECT * FROM teachers WHERE concat(tID, tName, tDept, tAdd, tContact, tStatus) LIKE ?";
 
-        try{
-            String query = "SELECT * FROM teachers WHERE concat(tID, tName, tDept, tAdd, tContact, tStatus) "
-                    + "LIKE '%" + searchText + "%'";
-
-            b.rs = b.st.executeQuery(query);
-
-            System.out.println("Success with SQL!");
-
-            while (b.rs.next()){
-                String i = b.rs.getString("tID");
-                String c = b.rs.getString("tName");
-                String d = b.rs.getString("tDept");
-                String t = b.rs.getString("tAdd");
-                String g = b.rs.getString("tContact");
-                String y = b.rs.getString("tStatus");
-
-                String[] items = {i, c, d, t, g, y};
-                tblmodel.addRow(items);
+        try (java.sql.PreparedStatement pstmt = b.con.prepareStatement(query)) {
+            pstmt.setString(1, "%" + searchText + "%");
+            
+            try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()){
+                    String[] items = {
+                        rs.getString("tID"), 
+                        rs.getString("tName"), 
+                        rs.getString("tDept"), 
+                        rs.getString("tAdd"), 
+                        rs.getString("tContact"), 
+                        rs.getString("tStatus")
+                    };
+                    tblmodel.addRow(items);
+                }
             }
-
         } catch (Exception e){
             System.out.println("NOT successful with SQL!");
             e.printStackTrace();
         }
     }
+    
     private void showAssignRec() {
         DefaultTableModel tblmodel =
                 (DefaultTableModel) showsubjTable.getModel();
@@ -414,6 +410,7 @@ public class TeachersForm extends javax.swing.JFrame {
 
         if (confirm == JOptionPane.YES_OPTION) {
 
+            // PASS ONLY THE ID INTO THE METHOD
             boolean deleted = c.delete_teacher(teacherID);
 
             if (deleted) {
@@ -506,39 +503,28 @@ public class TeachersForm extends javax.swing.JFrame {
 
     private void assignsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_assignsubjbtnActionPerformed
         // TODO add your handling code here:
-        Assign a = new Assign();
-
         if ("".equals(tID.getText())) {
             messagebox("Please select a teacher first.", "Assign");
             return;
         }
-
-        if (a.getsubjID() == 0) {
-            messagebox("Please select a subject first.", "Assign");
+        if (EnrollmentSystem.globalSubjID == 0) {
+            messagebox("Please select a subject from the Subjects window first.", "Assign");
             return;
         }
 
-        int i = JOptionPane.showConfirmDialog(
-                null,
-                "Assign Teacher ID: " + tID.getText()
-                        + " to Subject ID: " + a.getsubjID(),
-                "Assign",
-                JOptionPane.OK_CANCEL_OPTION
-        );
+        Assign a = new Assign();
+        a.setsubjID(EnrollmentSystem.globalSubjID); // Pull ID from the global tracker
 
+        int i = JOptionPane.showConfirmDialog(null, "Assign Teacher ID: " + tID.getText() + " to Subject ID: " + a.getsubjID(), "Assign", JOptionPane.OK_CANCEL_OPTION);
+        
         if (i == JOptionPane.OK_OPTION) {
-
-            String result = a.assignTchr(
-                    Integer.parseInt(tID.getText())
-            );
-
+            String result = a.assignTchr(Integer.parseInt(tID.getText()));
             if (result.equals("This subject is already assigned to a teacher.")) {
                 messagebox(result, "Assignment Failed");
             } else {
                 messagebox(result, "Success!!");
                 showAssignRec();
             }
-
         } else {
             messagebox("Cancel Assign " + tID.getText(), "Assign");
         }
@@ -566,25 +552,14 @@ public class TeachersForm extends javax.swing.JFrame {
 
     private void showsubjTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showsubjTableMouseClicked
         // TODO add your handling code here:
-        Assign a = new Assign();
-
         int selectedRow = showsubjTable.getSelectedRow();
-
-        if (selectedRow < 0) {
-            return;
-        }
-
+        if (selectedRow < 0) return;
+        
         Object value = showsubjTable.getValueAt(selectedRow, 0);
-
-        if (value == null) {
-            return;
-        }
+        if (value == null) return;
 
         selectedSubjID = Integer.parseInt(value.toString());
-
         System.out.println("Selected Subject ID: " + selectedSubjID);
-
-        a.setsubjID(selectedSubjID);
     }//GEN-LAST:event_showsubjTableMouseClicked
 
     private void deletesubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletesubjbtnActionPerformed

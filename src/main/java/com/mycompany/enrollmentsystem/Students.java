@@ -91,20 +91,24 @@ public class Students {
     public void delete_student(int studID) {
         EnrollmentSystem b = new EnrollmentSystem();
 
-        if (!b.DBConnect()) {
-            System.out.println("Database connection failed!");
-            return;
-        }
-
-        String query = "DELETE FROM students WHERE studID = " + studID;
+        if (!b.DBConnect()) return;
 
         try {
-            int rows = b.st.executeUpdate(query);
-
-            if (rows > 0) {
-                System.out.println("Student deleted successfully!");
+            // Drop dependencies first to prevent constraint errors
+            try (PreparedStatement ps = b.con.prepareStatement("DELETE FROM enroll WHERE studid = ?")) {
+                ps.setInt(1, studID);
+                ps.executeUpdate();
             }
 
+            try (PreparedStatement ps = b.con.prepareStatement("DELETE FROM students WHERE studID = ?")) {
+                ps.setInt(1, studID);
+                int rows = ps.executeUpdate();
+
+                if (rows > 0) {
+                    System.out.println("Student deleted successfully!");
+                    b.dropDatabaseUser(String.valueOf(studID)); // Now only uses ID
+                }
+            }
         } catch (Exception e) {
             System.out.println("Not successful!");
             e.printStackTrace();

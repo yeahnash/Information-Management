@@ -246,6 +246,8 @@ public class Login extends javax.swing.JFrame {
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
+        EnrollmentSystem a = new EnrollmentSystem();
+        messagebox("Created " + a.newdb("1st") + " DB.", "Confirmation");
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void loginbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginbtnActionPerformed

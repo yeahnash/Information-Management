@@ -17,37 +17,37 @@ public class StudentsForm extends javax.swing.JFrame {
     String sCourse;
     String sGender;
     String sYrLvl;
+    int selectedSubjID = 0;
     
     public void showRecords(){
         DefaultTableModel tblmodel = (DefaultTableModel) studTable.getModel();
-        
         tblmodel.setRowCount(0);
         EnrollmentSystem b = new EnrollmentSystem();
-        b.DBConnect();
+        if (!b.DBConnect()) return;
         
         String searchText = search.getText();
         if (searchText.equals("Search")) searchText = "";
         
-        try{
-            String query = "SELECT * FROM students WHERE concat(studID, studName, studAdd, studCrs, studGender, yrLvl) like '%" + searchText + "%'";
-            b.rs = b.st.executeQuery(query);
-            System.out.println("Success with SQL!");
-            
-            while (b.rs.next()){
-                String i = b.rs.getString("studID");
-                String c = b.rs.getString("studName");
-                String d = b.rs.getString("studAdd");
-                String t = b.rs.getString("studCrs");
-                String g = b.rs.getString("studGender");
-                String y = b.rs.getString("yrLvl");
-                String[] items = {i, c, d, t, g, y};
-                tblmodel.addRow(items);
+        String query = "SELECT * FROM students WHERE concat(studID, studName, studAdd, studCrs, studGender, yrLvl) like ?";
+        
+        try (java.sql.PreparedStatement pstmt = b.con.prepareStatement(query)) {
+            pstmt.setString(1, "%" + searchText + "%");
+            try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()){
+                    String[] items = {
+                        rs.getString("studID"), rs.getString("studName"), 
+                        rs.getString("studAdd"), rs.getString("studCrs"), 
+                        rs.getString("studGender"), rs.getString("yrLvl")
+                    };
+                    tblmodel.addRow(items);
+                }
             }
-        }catch (Exception e){
+        } catch (Exception e){
             System.out.print("NOT successful with SQL!");
             e.printStackTrace();
         }
     }
+    
     public static int okcancel(String theMessage) {
         int result = JOptionPane.showConfirmDialog(
             null,
@@ -183,7 +183,6 @@ public class StudentsForm extends javax.swing.JFrame {
                 deletebtnMousePressed(evt);
             }
         });
-        deletebtn.addActionListener(this::deletebtnActionPerformed);
 
         showsubjTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -398,19 +397,15 @@ public class StudentsForm extends javax.swing.JFrame {
         ex.printStackTrace();
     }
 }
-    private void deletebtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletebtnActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_deletebtnActionPerformed
-
     private void deletebtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deletebtnMouseClicked
         Students b = new Students();
-        if ("".equals(studID.getText()) )
+        if ("".equals(studID.getText()) ) {
             messagebox("Select a Student to Delete first","Delete");
-        else
+        } else {
+            // Pass ONLY the student ID to match the updated deletion logic
             b.delete_student(Integer.parseInt(studID.getText()));
-        
+        }
         showRecords();
-        // TODO add your handling code here:
     }//GEN-LAST:event_deletebtnMouseClicked
 
     private void deletebtnMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deletebtnMousePressed
@@ -470,24 +465,23 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void enrollsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enrollsubjbtnActionPerformed
         // TODO add your handling code here:
+        if (EnrollmentSystem.globalSubjID == 0) {
+            messagebox("Please select a subject from the Subjects window first.", "Enroll");
+            return;
+        }
+
         Enrolled a = new Enrolled();
+        a.setsubjID(EnrollmentSystem.globalSubjID); // Pull ID from the global tracker
     
-        int i = okcancel(
-            "Enroll student ID: " + stdID +
-            " to subject ID: " + a.getsubjID()
-        );
-
+        int i = okcancel("Enroll student ID: " + stdID + " to subject ID: " + a.getsubjID());
         if (i == 0) {
-
             String result = a.enrollStud(Integer.parseInt(stdID));
-
             if (result.equals("Student is already Enrolled in this subject.")) {
                 messagebox(result, "Enrollment Failed");
             } else {
                 messagebox(result, "Success!!");
                 showEnrollRec();
             }
-
         } else {
             messagebox("Cancel Enroll " + stdID, "Enroll");
         }
@@ -496,23 +490,13 @@ public class StudentsForm extends javax.swing.JFrame {
     private void showsubjTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showsubjTableMouseClicked
         // TODO add your handling code here:
         int selectedRow = showsubjTable.getSelectedRow();
-
-        if (selectedRow == -1) {
-            return;
-        }
-
+        if (selectedRow == -1) return;
+        
         Object value = showsubjTable.getValueAt(selectedRow, 0);
-
-        if (value == null) {
-            return;
-        }
-
-        int selectedSubjID = Integer.parseInt(value.toString());
-
+        if (value == null) return;
+        
+        selectedSubjID = Integer.parseInt(value.toString());
         System.out.println("Selected Subject ID: " + selectedSubjID);
-
-        Enrolled a = new Enrolled();
-        a.setsubjID(selectedSubjID);
     }//GEN-LAST:event_showsubjTableMouseClicked
 
     private void dropsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dropsubjbtnActionPerformed
@@ -541,22 +525,10 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void subjectbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_subjectbtnActionPerformed
         // TODO add your handling code here:
-        EnrollmentSystem a = new EnrollmentSystem();
-
-        String dbName = a.newdb("1st");
-
-        if (dbName == null) {
-            messagebox(
-                "First Semester database already exists.",
-                "Database Exists"
-            );
-        } else {
-            messagebox(
-                "Created " + dbName + " DB.",
-                "Confirmation"
-            );
-        }
+        SubjectsForm b = new SubjectsForm();
+        b.setVisible(true);
         
+        b.showRecords();
     }//GEN-LAST:event_subjectbtnActionPerformed
 
     private void firstsemesterbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firstsemesterbtnActionPerformed

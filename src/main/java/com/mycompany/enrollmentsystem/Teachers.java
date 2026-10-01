@@ -89,35 +89,28 @@ public class Teachers {
     
     public boolean delete_teacher(int tID){
         EnrollmentSystem b = new EnrollmentSystem();
-        
-        if (!b.DBConnect()) {
-            System.out.println("Database connection failed!");
-            return false;
-        }
+        if (!b.DBConnect()) return false;
 
         try {
-            // First remove the teacher's subject assignments
-            String deleteAssignments =
-                    "DELETE FROM assign WHERE TID = " + tID;
-
-            b.st.executeUpdate(deleteAssignments);
-
-            // Then delete the teacher
-            String deleteTeacher =
-                    "DELETE FROM teachers WHERE TID = " + tID;
-
-            int rows = b.st.executeUpdate(deleteTeacher);
-
-            if (rows > 0) {
-                System.out.println("Teacher deleted successfully!");
-                return true;
+            try (java.sql.PreparedStatement ps = b.con.prepareStatement("DELETE FROM assign WHERE TID = ?")) {
+                ps.setInt(1, tID);
+                ps.executeUpdate();
             }
 
+            try (java.sql.PreparedStatement ps = b.con.prepareStatement("DELETE FROM teachers WHERE TID = ?")) {
+                ps.setInt(1, tID);
+                int rows = ps.executeUpdate();
+
+                if (rows > 0) {
+                    System.out.println("Teacher deleted successfully!");
+                    b.dropDatabaseUser(String.valueOf(tID)); // Now only uses ID
+                    return true;
+                }
+            }
         } catch (Exception e) {
             System.out.println("Not successful!");
             e.printStackTrace();
         }
-
         return false;
     }
     

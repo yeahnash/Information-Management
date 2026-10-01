@@ -20,30 +20,33 @@ public class SubjectsForm extends javax.swing.JFrame {
     
     public void showRecords(){
         DefaultTableModel tblmodel = (DefaultTableModel) subjTable.getModel();
-        
         tblmodel.setRowCount(0);
+        
         EnrollmentSystem b = new EnrollmentSystem();
-        b.DBConnect();
+        if (!b.DBConnect()) return;
         
         String searchText = search.getText();
         if (searchText.equals("Search")) searchText = "";
         
-        try{
-            String query = "SELECT * FROM subjects WHERE concat(subjID, subjCode, subjDesc, subjUnits, subjSched) like '%" + searchText + "%'";
-            b.rs = b.st.executeQuery(query);
-            System.out.println("Success with SQL!");
+        String query = "SELECT * FROM subjects WHERE concat(subjID, subjCode, subjDesc, subjUnits, subjSched) like ?";
+        
+        try (java.sql.PreparedStatement pstmt = b.con.prepareStatement(query)) {
+            pstmt.setString(1, "%" + searchText + "%");
             
-            while (b.rs.next()){
-                String i = b.rs.getString("subjID");
-                String c = b.rs.getString("subjCode");
-                String d = b.rs.getString("subjDesc");
-                String t = b.rs.getString("subjUnits");
-                String g = b.rs.getString("subjSched");
-                String[] items = {i, c, d, t, g};
-                tblmodel.addRow(items);
+            try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()){
+                    String[] items = {
+                        rs.getString("subjID"), 
+                        rs.getString("subjCode"), 
+                        rs.getString("subjDesc"), 
+                        rs.getString("subjUnits"), 
+                        rs.getString("subjSched")
+                    };
+                    tblmodel.addRow(items);
+                }
             }
-        }catch (Exception e){
-            System.out.print("NOT successful with SQL!");
+        } catch (Exception e){
+            System.out.println("NOT successful with SQL!");
             e.printStackTrace();
         }
     }
@@ -175,11 +178,6 @@ public class SubjectsForm extends javax.swing.JFrame {
                 "Student ID", "Name", "Address", "Course", "Gender", "Year level"
             }
         ));
-        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jTable1MouseClicked(evt);
-            }
-        });
         jScrollPane2.setViewportView(jTable1);
 
         jLabel6.setText("Class List");
@@ -405,13 +403,8 @@ public class SubjectsForm extends javax.swing.JFrame {
             subjSched.setText(subSched);
         }
 
-        // Store selected subject ID for enrollment
-        Enrolled a = new Enrolled();
-        a.setsubjID(Integer.parseInt(subID));
-        
-        // Store selected subject ID for teacher assignment
-        Assign b = new Assign();
-        b.setsubjID(Integer.parseInt(subID));
+        // Store selected subject globally across all forms
+        EnrollmentSystem.globalSubjID = Integer.parseInt(subID);
 
         // Display students enrolled in this subject
         showClassList();
@@ -455,10 +448,6 @@ public class SubjectsForm extends javax.swing.JFrame {
         
         b.showRecords();
     }//GEN-LAST:event_teachersbtnActionPerformed
-
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTable1MouseClicked
 
     /**
      * @param args the command line arguments

@@ -18,13 +18,15 @@ public class EnrollmentSystem {
 
     Connection con;
     Statement st;
-    static ResultSet rs;
+    public ResultSet rs;
     
     public static String currentUser = "";
     public static String currentPassword = "";
     public static String currentRole = "";
     public static String currentSemesterDB = "";
     public static String db = "";
+    
+    public static int globalSubjID = 0;
 
     public void currentDB(String dbName) {
         db = dbName;
@@ -168,22 +170,20 @@ public class EnrollmentSystem {
             String role,
             String targetDB) {
 
-        String cleanName =
-                name.replaceAll("\\s+", "").toLowerCase();
-
+        String cleanName = name.replaceAll("\\s+", "").toLowerCase();
         String newUsername = id + cleanName;
         String newPassword = cleanName;
 
-        try {
+        // Use the logged-in admin's credentials dynamically
+        String adminUser = (currentUser != null && !currentUser.isEmpty()) ? currentUser : "root";
+        String adminPass = (currentPassword != null && !currentPassword.isEmpty()) ? currentPassword : "root";
 
-            Connection rootCon = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/"
-                            + "?zeroDateTimeBehavior=CONVERT_TO_NULL",
-                    "root",
-                    "root"
-            );
-
-            Statement rootSt = rootCon.createStatement();
+        // try-with-resources automatically closes the connection and statement to prevent leaks
+        try (Connection rootCon = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/?zeroDateTimeBehavior=CONVERT_TO_NULL",
+                    adminUser,
+                    adminPass
+            ); Statement rootSt = rootCon.createStatement()) {
 
             String createUser =
                     "CREATE USER IF NOT EXISTS '" +
@@ -195,7 +195,6 @@ public class EnrollmentSystem {
             rootSt.executeUpdate(createUser);
 
             if (role.equalsIgnoreCase("Student")) {
-
                 String grantStudent =
                         "GRANT SELECT ON `" +
                         targetDB +
@@ -206,7 +205,6 @@ public class EnrollmentSystem {
                 rootSt.executeUpdate(grantStudent);
 
             } else if (role.equalsIgnoreCase("Teacher")) {
-
                 String grantTeacher =
                         "GRANT SELECT, INSERT, UPDATE ON `" +
                         targetDB +
@@ -228,21 +226,11 @@ public class EnrollmentSystem {
 
             rootSt.executeUpdate("FLUSH PRIVILEGES");
 
-            rootSt.close();
-            rootCon.close();
-
-            System.out.println(
-                    "MySQL user created: " + newUsername
-            );
-
+            System.out.println("MySQL user created: " + newUsername);
             return true;
 
         } catch (Exception e) {
-
-            System.out.println(
-                    "Failed to create MySQL user: " + e
-            );
-
+            System.out.println("Failed to create MySQL user: " + e);
             return false;
         }
     }
@@ -389,6 +377,42 @@ public class EnrollmentSystem {
         }
 
         return dbList;
+    }
+    
+    public boolean dropDatabaseUser(String id) {
+        String adminUser = (currentUser != null && !currentUser.isEmpty()) ? currentUser : "root";
+        String adminPass = (currentPassword != null && !currentPassword.isEmpty()) ? currentPassword : "root";
+
+        // Connect specifically to the 'mysql' database to search for the user
+        try (java.sql.Connection rootCon = java.sql.DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/mysql?zeroDateTimeBehavior=CONVERT_TO_NULL",
+                adminUser,
+                adminPass
+        ); java.sql.Statement rootSt = rootCon.createStatement()) {
+
+            String exactUsername = "";
+            
+            // Search for the exact MySQL username using the unique ID prefix
+            try (java.sql.ResultSet rs = rootSt.executeQuery("SELECT user FROM user WHERE user LIKE '" + id + "%'")) {
+                if (rs.next()) {
+                    exactUsername = rs.getString("user");
+                }
+            }
+
+            if (!exactUsername.isEmpty()) {
+                rootSt.executeUpdate("DROP USER IF EXISTS '" + exactUsername + "'@'localhost'");
+                rootSt.executeUpdate("FLUSH PRIVILEGES");
+                System.out.println("MySQL user dropped: " + exactUsername);
+                return true;
+            } else {
+                System.out.println("Could not find a MySQL user starting with ID: " + id);
+                return false;
+            }
+
+        } catch (Exception e) {
+            System.out.println("Failed to drop MySQL user: " + e);
+            return false;
+        }
     }
     
 //    public ArrayList<String> getDatabasesAsRoot() {
