@@ -13,22 +13,32 @@ public class Enrolled extends EnrollmentSystem {
     }
 
     public String enrollStud(int studID) {
-        if (!DBConnect()) return "Database connection failed";
+        if (!DBConnect()) {
+            return "Database connection failed";
+        }
 
-        String enrollQuery = "INSERT INTO enroll(studID, subjID, evaluation) VALUES(?, ?, ' ')";
+        String enrollQuery =
+                "INSERT INTO enroll(studid, subjid, evaluation) VALUES(?, ?, ?)";
 
         try (PreparedStatement pstmt = con.prepareStatement(enrollQuery)) {
+
             pstmt.setInt(1, studID);
             pstmt.setInt(2, subjID);
-            pstmt.executeUpdate();
-            return "Student " + studID + " Enrolled to " + subjID;
+            pstmt.setString(3, "");
 
-        } catch (java.sql.SQLIntegrityConstraintViolationException e) {
-            return "Student is already Enrolled in this subject.";
-        } catch (Exception e) {
-            System.out.println("Failed to insert " + e);
-            return "Enrollment Failed";
-        }
+            pstmt.executeUpdate();
+
+            return "Student " + studID + " enrolled in subject " + subjID;
+
+        } catch (java.sql.SQLException e) {
+            if (e.getErrorCode() == 1062) {
+                return "Student " + studID
+                        + " is already enrolled in subject " + subjID + ".";
+            }
+
+            e.printStackTrace();
+            return "Enrollment Failed: " + e.getMessage();
+}
     }
 
     public String dropSubject(int studID) {

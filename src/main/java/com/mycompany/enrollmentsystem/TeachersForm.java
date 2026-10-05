@@ -563,18 +563,29 @@ public class TeachersForm extends javax.swing.JFrame {
     }//GEN-LAST:event_showsubjTableMouseClicked
 
     private void deletesubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletesubjbtnActionPerformed
-        // TODO add your handling code here:
-        Assign a = new Assign();
-    
+        int selectedRow = showsubjTable.getSelectedRow();
+
         if ("".equals(tID.getText())) {
             messagebox("Select a teacher first.", "Delete Subject");
             return;
         }
 
-        if (a.getsubjID() == 0) {
-            messagebox("Select a subject first.", "Delete Subject");
+        if (selectedRow == -1) {
+            messagebox("Select an assigned subject first.", "Delete Subject");
             return;
         }
+
+        Object value = showsubjTable.getValueAt(selectedRow, 0);
+
+        if (value == null) {
+            messagebox("Invalid subject selected.", "Delete Subject");
+            return;
+        }
+
+        int subjectID = Integer.parseInt(value.toString());
+
+        Assign a = new Assign();
+        a.setsubjID(subjectID);
 
         String result = a.deleteSubject(
                 Integer.parseInt(tID.getText())
@@ -587,6 +598,10 @@ public class TeachersForm extends javax.swing.JFrame {
         } else {
             messagebox(result, "Success!!");
             showAssignRec();
+
+            // Clear the selection after deleting
+            showsubjTable.clearSelection();
+            selectedSubjID = 0;
         }
     }//GEN-LAST:event_deletesubjbtnActionPerformed
 

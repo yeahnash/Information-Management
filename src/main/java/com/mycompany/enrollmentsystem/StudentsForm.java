@@ -500,9 +500,30 @@ public class StudentsForm extends javax.swing.JFrame {
     }//GEN-LAST:event_showsubjTableMouseClicked
 
     private void dropsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dropsubjbtnActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = showsubjTable.getSelectedRow();
+
+        if (stdID == null || stdID.isEmpty()) {
+            messagebox("Select a student first.", "Drop Subject");
+            return;
+        }
+
+        if (selectedRow == -1) {
+            messagebox("Select an enrolled subject first.", "Drop Subject");
+            return;
+        }
+
+        Object value = showsubjTable.getValueAt(selectedRow, 0);
+
+        if (value == null) {
+            messagebox("Invalid subject selected.", "Drop Subject");
+            return;
+        }
+
+        int subjectID = Integer.parseInt(value.toString());
+
         Enrolled a = new Enrolled();
-    
+        a.setsubjID(subjectID);
+
         String result = a.dropSubject(Integer.parseInt(stdID));
 
         if (result.equals("Drop Failed")) {
@@ -512,6 +533,10 @@ public class StudentsForm extends javax.swing.JFrame {
         } else {
             messagebox(result, "Success!!");
             showEnrollRec();
+
+            // Clear the selection after dropping
+            showsubjTable.clearSelection();
+            selectedSubjID = 0;
         }
     }//GEN-LAST:event_dropsubjbtnActionPerformed
 
