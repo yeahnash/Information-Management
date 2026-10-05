@@ -369,34 +369,31 @@ public class StudentsForm extends javax.swing.JFrame {
      JOptionPane.showMessageDialog(null,msg,titlebar,JOptionPane.INFORMATION_MESSAGE);   
      }
     private void showEnrollRec() {
-    DefaultTableModel tblmodel = (DefaultTableModel) showsubjTable.getModel();
-    tblmodel.setRowCount(0);
-    
-    EnrollmentSystem b = new EnrollmentSystem();
-    b.DBConnect();
-    
-    try {
-        String query = "SELECT * FROM subjects WHERE subjID IN " +
-                       "(SELECT subjID FROM enroll WHERE studID = " + stdID + ")";
+        DefaultTableModel tblmodel = (DefaultTableModel) showsubjTable.getModel();
+        tblmodel.setRowCount(0);
         
-        b.rs = b.st.executeQuery(query);
+        EnrollmentSystem b = new EnrollmentSystem();
+        b.DBConnect();
         
-        while (b.rs.next()) {
-            String i = b.rs.getString("subjID");
-            String c = b.rs.getString("subjCode");
-            String d = b.rs.getString("subjDesc");
-            String t = b.rs.getString("subjUnits");
-            String g = b.rs.getString("subjSched");
-            
-            String[] item = {i, c, d, t, g};
-            tblmodel.addRow(item);
+        try {
+            String query = "SELECT * FROM subjects WHERE subjID IN " +
+                           "(SELECT subjID FROM enroll WHERE studID = " + stdID + ")";
+            b.rs = b.st.executeQuery(query);
+            while (b.rs.next()) {
+                String i = b.rs.getString("subjID");
+                String c = b.rs.getString("subjCode");
+                String d = b.rs.getString("subjDesc");
+                String t = b.rs.getString("subjUnits");
+                String g = b.rs.getString("subjSched");
+                
+                String[] item = {i, c, d, t, g};
+                tblmodel.addRow(item);
+            }
+        } catch (Exception ex) {
+            System.out.println("Not successful!");
+            ex.printStackTrace();
         }
-        
-    } catch (Exception ex) {
-        System.out.println("Not successful!");
-        ex.printStackTrace();
-    }
-}
+    } // FIX: Added missing closing brace for the showEnrollRec method
     private void deletebtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deletebtnMouseClicked
         Students b = new Students();
         if ("".equals(studID.getText()) ) {
@@ -464,15 +461,20 @@ public class StudentsForm extends javax.swing.JFrame {
     }//GEN-LAST:event_searchKeyPressed
 
     private void enrollsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enrollsubjbtnActionPerformed
-        // TODO add your handling code here:
         if (EnrollmentSystem.globalSubjID == 0) {
             messagebox("Please select a subject from the Subjects window first.", "Enroll");
             return;
         }
 
+        // FIX: Prevent students from enrolling other students
+        if (EnrollmentSystem.currentRole.equals("Student") && !EnrollmentSystem.currentUser.startsWith(stdID)) {
+            messagebox("Access Denied: You can only enroll subjects for your own account.", "Unauthorized");
+            return;
+        }
+
         Enrolled a = new Enrolled();
         a.setsubjID(EnrollmentSystem.globalSubjID); // Pull ID from the global tracker
-    
+        
         int i = okcancel("Enroll student ID: " + stdID + " to subject ID: " + a.getsubjID());
         if (i == 0) {
             String result = a.enrollStud(Integer.parseInt(stdID));
@@ -501,9 +503,14 @@ public class StudentsForm extends javax.swing.JFrame {
 
     private void dropsubjbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dropsubjbtnActionPerformed
         int selectedRow = showsubjTable.getSelectedRow();
-
         if (stdID == null || stdID.isEmpty()) {
             messagebox("Select a student first.", "Drop Subject");
+            return;
+        }
+
+        // FIX: Prevent students from dropping subjects for other students
+        if (EnrollmentSystem.currentRole.equals("Student") && !EnrollmentSystem.currentUser.startsWith(stdID)) {
+            messagebox("Access Denied: You can only drop subjects for your own account.", "Unauthorized");
             return;
         }
 
@@ -511,21 +518,18 @@ public class StudentsForm extends javax.swing.JFrame {
             messagebox("Select an enrolled subject first.", "Drop Subject");
             return;
         }
-
+        
         Object value = showsubjTable.getValueAt(selectedRow, 0);
-
         if (value == null) {
             messagebox("Invalid subject selected.", "Drop Subject");
             return;
         }
-
+        
         int subjectID = Integer.parseInt(value.toString());
-
         Enrolled a = new Enrolled();
         a.setsubjID(subjectID);
-
         String result = a.dropSubject(Integer.parseInt(stdID));
-
+        
         if (result.equals("Drop Failed")) {
             messagebox(result, "Drop Failed");
         } else if (result.equals("Student is not Enrolled in this subject.")) {
@@ -533,7 +537,6 @@ public class StudentsForm extends javax.swing.JFrame {
         } else {
             messagebox(result, "Success!!");
             showEnrollRec();
-
             // Clear the selection after dropping
             showsubjTable.clearSelection();
             selectedSubjID = 0;

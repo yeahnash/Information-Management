@@ -169,7 +169,6 @@ public class EnrollmentSystem {
             String name,
             String role,
             String targetDB) {
-
         String cleanName = name.replaceAll("\\s+", "").toLowerCase();
         String newUsername = id + cleanName;
         String newPassword = cleanName;
@@ -178,7 +177,6 @@ public class EnrollmentSystem {
         String adminUser = (currentUser != null && !currentUser.isEmpty()) ? currentUser : "root";
         String adminPass = (currentPassword != null && !currentPassword.isEmpty()) ? currentPassword : "root";
 
-        // try-with-resources automatically closes the connection and statement to prevent leaks
         try (Connection rootCon = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/?zeroDateTimeBehavior=CONVERT_TO_NULL",
                     adminUser,
@@ -186,46 +184,35 @@ public class EnrollmentSystem {
             ); Statement rootSt = rootCon.createStatement()) {
 
             String createUser =
-                    "CREATE USER IF NOT EXISTS '" +
-                    newUsername +
-                    "'@'localhost' IDENTIFIED BY '" +
-                    newPassword +
-                    "'";
-
+                    "CREATE USER IF NOT EXISTS '" + newUsername + "'@'localhost' IDENTIFIED BY '" + newPassword + "'";
             rootSt.executeUpdate(createUser);
 
             if (role.equalsIgnoreCase("Student")) {
                 String grantStudent =
-                        "GRANT SELECT ON `" +
-                        targetDB +
-                        "`.* TO '" +
-                        newUsername +
-                        "'@'localhost'";
-
+                        "GRANT SELECT ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'";
                 rootSt.executeUpdate(grantStudent);
-
+                
+                // FIX: Grant students permission to enroll and drop (INSERT and DELETE) 
+//                String grantStudentEnroll = 
+//                        "GRANT INSERT, DELETE ON `" + targetDB + "`.enroll TO '" + newUsername + "'@'localhost'";
+//                rootSt.executeUpdate(grantStudentEnroll);
+                
             } else if (role.equalsIgnoreCase("Teacher")) {
                 String grantTeacher =
-                        "GRANT SELECT, INSERT, UPDATE ON `" +
-                        targetDB +
-                        "`.* TO '" +
-                        newUsername +
-                        "'@'localhost'";
-
+                        "GRANT SELECT, INSERT, UPDATE ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'";
                 rootSt.executeUpdate(grantTeacher);
-
-                String grantDelete =
-                        "GRANT DELETE ON `" +
-                        targetDB +
-                        "`.enroll TO '" +
-                        newUsername +
-                        "'@'localhost'";
-
-                rootSt.executeUpdate(grantDelete);
+                
+                // FIX: Grant teachers permission to drop their assignments
+//                String grantDeleteAssign =
+//                        "GRANT DELETE ON `" + targetDB + "`.assign TO '" + newUsername + "'@'localhost'";
+//                rootSt.executeUpdate(grantDeleteAssign);
+//                
+//                String grantDeleteEnroll =
+//                        "GRANT DELETE ON `" + targetDB + "`.enroll TO '" + newUsername + "'@'localhost'";
+//                rootSt.executeUpdate(grantDeleteEnroll);
             }
 
             rootSt.executeUpdate("FLUSH PRIVILEGES");
-
             System.out.println("MySQL user created: " + newUsername);
             return true;
 
@@ -334,48 +321,41 @@ public class EnrollmentSystem {
     }
     
     public static ArrayList<String> getDatabases() {
-
         ArrayList<String> dbList = new ArrayList<>();
-
         try {
-
             Class.forName("com.mysql.cj.jdbc.Driver");
-
+            
+            // Fetch the currently logged-in user credentials, default to root if empty
+            String activeUser = (currentUser != null && !currentUser.isEmpty()) ? currentUser : "root";
+            String activePass = (currentPassword != null && !currentPassword.isEmpty()) ? currentPassword : "root";
+            
+            // Connect using the active user's credentials instead of hardcoded "root"
             Connection tempCon = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/?zeroDateTimeBehavior=CONVERT_TO_NULL",
-                    "root",
-                    "root"
+                    activeUser,
+                    activePass
             );
-
             Statement tempSt = tempCon.createStatement();
-
-            ResultSet tempRs =
-                    tempSt.executeQuery("SHOW DATABASES");
-
+            ResultSet tempRs = tempSt.executeQuery("SHOW DATABASES");
+            
             while (tempRs.next()) {
-
                 String dbName = tempRs.getString(1);
                 String lowerDbName = dbName.toLowerCase();
-
+                
                 if (lowerDbName.startsWith("1st_sy")
                         || lowerDbName.startsWith("2nd_sy")
                         || lowerDbName.startsWith("summer_sy")) {
-
                     dbList.add(dbName);
                 }
             }
-
             tempRs.close();
             tempSt.close();
             tempCon.close();
-
         } catch (Exception e) {
-
             System.err.println(
                     "Failed to fetch semester databases: " + e.getMessage()
             );
         }
-
         return dbList;
     }
     
