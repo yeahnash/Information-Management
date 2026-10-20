@@ -394,48 +394,4 @@ public class EnrollmentSystem {
             return false;
         }
     }
-    
-//    public ArrayList<String> getDatabasesAsRoot() {
-//
-//        ArrayList<String> databases = new ArrayList<>();
-//
-//        try {
-//
-//            Connection rootCon = DriverManager.getConnection(
-//                    "jdbc:mysql://localhost:3306/?zeroDateTimeBehavior=CONVERT_TO_NULL",
-//                    "root",
-//                    "root"
-//            );
-//
-//            Statement rootSt = rootCon.createStatement();
-//
-//            ResultSet rs = rootSt.executeQuery("SHOW DATABASES");
-//
-//            while (rs.next()) {
-//
-//                String dbName = rs.getString(1);
-//                String lowerDbName = dbName.toLowerCase();
-//
-//                if (lowerDbName.startsWith("1st_sy")
-//                        || lowerDbName.startsWith("2nd_sy")
-//                        || lowerDbName.startsWith("summer_sy")) {
-//
-//                    databases.add(dbName);
-//                }
-//            }
-//
-//            rs.close();
-//            rootSt.close();
-//            rootCon.close();
-//
-//        } catch (Exception e) {
-//
-//            System.out.println(
-//                    "Error getting semester databases: " + e
-//            );
-//        }
-//
-//        return databases;
-//    }
-
 }

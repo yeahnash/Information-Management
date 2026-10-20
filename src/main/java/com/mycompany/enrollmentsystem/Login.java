@@ -405,8 +405,8 @@ public class Login extends javax.swing.JFrame {
 
             } else if (EnrollmentSystem.currentRole.equals("Teacher")) {
 
-                TeachersForm teacherForm = new TeachersForm();
-                teacherForm.setVisible(true);
+                GradesForm gradesForm = new GradesForm();
+                gradesForm.setVisible(true);
 
             } else {
 
