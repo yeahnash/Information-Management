@@ -329,8 +329,6 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_loginbtnActionPerformed
 
     private void submitDBbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitDBbtnActionPerformed
-        // TODO add your handling code here:
-        // Check if the user has logged in
         if (EnrollmentSystem.currentUser == null
                 || EnrollmentSystem.currentUser.isEmpty()) {
 
@@ -340,7 +338,6 @@ public class Login extends javax.swing.JFrame {
                     "Error",
                     javax.swing.JOptionPane.ERROR_MESSAGE
             );
-
             return;
         }
 
@@ -353,14 +350,12 @@ public class Login extends javax.swing.JFrame {
                     "Error",
                     javax.swing.JOptionPane.WARNING_MESSAGE
             );
-
             return;
         }
 
-        String selectedDb =
-                jComboBox1.getSelectedItem().toString();
+        String selectedDb = jComboBox1.getSelectedItem().toString();
 
-        // Make sure the placeholder isn't selected
+        // Validate selected database
         if (selectedDb.equals("Databases")
                 || selectedDb.equals("Item 1")
                 || selectedDb.equals("null")) {
@@ -371,7 +366,6 @@ public class Login extends javax.swing.JFrame {
                     "Error",
                     javax.swing.JOptionPane.WARNING_MESSAGE
             );
-
             return;
         }
 
@@ -386,25 +380,57 @@ public class Login extends javax.swing.JFrame {
                 EnrollmentSystem.currentPassword,
                 selectedDb)) {
 
-            javax.swing.JOptionPane.showMessageDialog(
-                    this,
-                    "Connected to " + selectedDb,
-                    "Database Selected",
-                    javax.swing.JOptionPane.INFORMATION_MESSAGE
-            );
+            String role = EnrollmentSystem.currentRole;
 
-            if (EnrollmentSystem.currentRole.equals("Admin")) {
+            if ("Admin".equalsIgnoreCase(role)) {
 
+                // Admin: Open StudentsForm
                 StudentsForm studentForm = new StudentsForm();
                 studentForm.setVisible(true);
 
-            } else if (EnrollmentSystem.currentRole.equals("Student")) {
+            } else if ("Student".equalsIgnoreCase(role)) {
 
-                StudentsForm studentForm = new StudentsForm();
-                studentForm.setVisible(true);
+            // Extract the numeric student ID from the login username.
+            // Example: username "1001b" becomes student ID "1001".
+            String username = EnrollmentSystem.currentUser;
+            StringBuilder digits = new StringBuilder();
 
-            } else if (EnrollmentSystem.currentRole.equals("Teacher")) {
+            for (int i = 0; i < username.length(); i++) {
+                if (Character.isDigit(username.charAt(i))) {
+                    digits.append(username.charAt(i));
+                } else {
+                    break;
+                }
+            }
 
+            if (digits.length() == 0) {
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Could not identify your student ID.",
+                        "TOR Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            try {
+                TorPDF.generateAndOpenTORForSelectedDatabase(
+                        selectedDb, digits.toString()
+                );
+            } catch (Exception e) {
+                javax.swing.JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to generate TOR: " + e.getMessage(),
+                        "TOR Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                );
+                e.printStackTrace();
+                return;
+            }
+
+            } else if ("Teacher".equalsIgnoreCase(role)) {
+
+                // Teacher: Open GradesForm
                 GradesForm gradesForm = new GradesForm();
                 gradesForm.setVisible(true);
 
@@ -416,7 +442,6 @@ public class Login extends javax.swing.JFrame {
                         "Login Error",
                         javax.swing.JOptionPane.ERROR_MESSAGE
                 );
-
                 return;
             }
 
