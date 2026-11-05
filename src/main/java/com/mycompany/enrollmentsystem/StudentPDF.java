@@ -61,7 +61,7 @@ public class StudentPDF {
             headerTable.setHorizontalAlignment(Element.ALIGN_CENTER);
 
             PdfPCell cellText = new PdfPCell(
-                    new Phrase("International State College \nof The Philippinnes", bfBold12));
+                    new Phrase("Ateneo de Davao \nUniversity", bfBold12));
             cellText.setBorder(Rectangle.NO_BORDER);
             cellText.setVerticalAlignment(Element.ALIGN_MIDDLE);
             cellText.setHorizontalAlignment(Element.ALIGN_LEFT);
@@ -135,7 +135,7 @@ public class StudentPDF {
             table.setWidthPercentage(90f);
 
             insertCell(table, "SubjID", Element.ALIGN_CENTER, 1, bfBold12);
-            insertCell(table, "Subj Code", Element.ALIGN_CENTER, 1, bfBold12);
+            insertCell(table, "SubjCode", Element.ALIGN_CENTER, 1, bfBold12);
             insertCell(table, "Prelim", Element.ALIGN_CENTER, 1, bfBold12);
             insertCell(table, "Midterm", Element.ALIGN_CENTER, 1, bfBold12);
             insertCell(table, "Prefinal", Element.ALIGN_CENTER, 1, bfBold12);

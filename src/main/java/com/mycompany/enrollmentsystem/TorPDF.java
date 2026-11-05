@@ -16,6 +16,7 @@ import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.Chunk;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -34,241 +35,380 @@ import javax.swing.JOptionPane;
 
 public class TorPDF {
 
+    
     public static void generateAndOpenTOR(String studId) {
-        Document doc = new Document();
-        PdfWriter docWriter = null;
 
-        EnrollmentSystem es = new EnrollmentSystem();
-        boolean connected = false;
+        Document doc = new Document(
+                com.itextpdf.text.PageSize.A4,
+                36, 36, 36, 36
+        );
+
+        PdfWriter writer = null;
         Connection tempCon = null;
 
-        Font bfBold14 = new Font(FontFamily.TIMES_ROMAN, 14, Font.BOLD);
-        Font bfBold11 = new Font(FontFamily.TIMES_ROMAN, 11, Font.BOLD);
-        Font bfBold10 = new Font(FontFamily.TIMES_ROMAN, 10, Font.BOLD);
-        Font bf10 = new Font(FontFamily.TIMES_ROMAN, 10);
-        Font bf9 = new Font(FontFamily.TIMES_ROMAN, 9);
+        Font titleFont = new Font(FontFamily.TIMES_ROMAN, 16, Font.BOLD);
+        Font subtitleFont = new Font(FontFamily.TIMES_ROMAN, 13, Font.BOLD);
+        Font headerFont = new Font(FontFamily.TIMES_ROMAN, 9, Font.BOLD);
+        Font normalFont = new Font(FontFamily.TIMES_ROMAN, 9);
+        Font boldFont = new Font(FontFamily.TIMES_ROMAN, 9, Font.BOLD);
 
-        String fileName = "TOR_Student_" + studId + ".pdf";
-        File pdfFile = new File(System.getProperty("user.home"), fileName);
+        Font underlineFont = new Font(FontFamily.TIMES_ROMAN, 9);
+        underlineFont.setStyle(Font.UNDERLINE);
+
+        File pdfFile = new File(
+                System.getProperty("user.home"),
+                "TOR_Student_" + studId + ".pdf"
+        );
 
         try {
-            // Connect to the current database.
-            if (!es.DBConnect()) {
-                JOptionPane.showMessageDialog(null, "Database connection failed.");
-                return;
-            }
-            connected = true;
-
             int studentId = Integer.parseInt(studId);
 
-            docWriter = PdfWriter.getInstance(doc, new FileOutputStream(pdfFile));
-            doc.open();
-
-            // 1. Header
-            float[] headerWidths = {1.5f, 5f};
-            PdfPTable headerTable = new PdfPTable(headerWidths);
-            headerTable.setWidthPercentage(80f);
-            headerTable.setHorizontalAlignment(Element.ALIGN_CENTER);
-
-            PdfPCell cellText = new PdfPCell(
-                    new Phrase("International State College \nof The Philippinnes", bfBold11));
-            cellText.setBorder(Rectangle.NO_BORDER);
-            cellText.setVerticalAlignment(Element.ALIGN_MIDDLE);
-            cellText.setHorizontalAlignment(Element.ALIGN_LEFT);
-
-            PdfPCell cellLogo = new PdfPCell(new Phrase("", bf10));
-            cellLogo.setBorder(Rectangle.NO_BORDER);
-
-            headerTable.addCell(cellLogo);
-            headerTable.addCell(cellText);
-            doc.add(headerTable);
-
-            doc.add(new Paragraph("\n"));
-
-            // 2. Title
-            Paragraph title = new Paragraph("Official Transcript of Records", bfBold14);
-            title.setAlignment(Element.ALIGN_CENTER);
-            doc.add(title);
-            doc.add(new Paragraph("\n"));
-
-            // 3. Fetch student information from the current database.
-            String studName = "";
-            String studCourse = "";
-            String studGender = "";
-
-            String studentSql =
-                    "SELECT studname, studcrs, studgender FROM students WHERE studid = ?";
-
-            try (PreparedStatement pstmtStud = es.con.prepareStatement(studentSql)) {
-                pstmtStud.setInt(1, studentId);
-
-                try (ResultSet rsStud = pstmtStud.executeQuery()) {
-                    if (rsStud.next()) {
-                        studName = rsStud.getString("studname") != null
-                                ? rsStud.getString("studname") : "";
-                        studCourse = rsStud.getString("studcrs") != null
-                                ? rsStud.getString("studcrs") : "";
-                        studGender = rsStud.getString("studgender") != null
-                                ? rsStud.getString("studgender") : "";
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Student not found.");
-                        return;
-                    }
-                }
-            }
-
-            // 4. Student information
-            float[] infoWidths = {5f, 5f};
-            PdfPTable infoTable = new PdfPTable(infoWidths);
-            infoTable.setWidthPercentage(90f);
-
-            addNoBorderCell(infoTable, "Student ID: " + studId,
-                    bfBold11, Element.ALIGN_LEFT);
-            addNoBorderCell(infoTable, "Student Name: " + studName,
-                    bfBold11, Element.ALIGN_LEFT);
-
-            addNoBorderCell(infoTable, "Student Course: " + studCourse,
-                    bfBold11, Element.ALIGN_LEFT);
-            addNoBorderCell(infoTable, "Gender: " + studGender,
-                    bfBold11, Element.ALIGN_LEFT);
-
-            doc.add(infoTable);
-            doc.add(new Paragraph("\n"));
-
-            // 5. Grades table
-            float[] columnWidths = {1.8f, 2f, 4f, 2f, 1.5f};
-            PdfPTable table = new PdfPTable(columnWidths);
-            table.setWidthPercentage(90f);
-
-            addHeaderCell(table, "SubjID", Element.ALIGN_CENTER, bfBold10);
-            addHeaderCell(table, "Subj Code", Element.ALIGN_CENTER, bfBold10);
-            addHeaderCell(table, "Descriptive Title", Element.ALIGN_CENTER, bfBold10);
-            addHeaderCell(table, "Final", Element.ALIGN_CENTER, bfBold10);
-            addHeaderCell(table, "Credit", Element.ALIGN_CENTER, bfBold10);
-
-            // 6. Discover semester databases.
-            List<String> semesterDbs = new ArrayList<>();
-
-            String dbUser = EnrollmentSystem.currentUser;
-            String dbPassword = EnrollmentSystem.currentPassword;
-
-            if (dbUser == null || dbUser.isEmpty()) {
-                dbUser = "root";
-            }
-
-            if (dbPassword == null) {
-                dbPassword = "";
-            }
-
+            // Connect using the logged-in Admin credentials.
             tempCon = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/?zeroDateTimeBehavior=CONVERT_TO_NULL",
-                    dbUser,
-                    dbPassword
+                    EnrollmentSystem.currentUser,
+                    EnrollmentSystem.currentPassword
             );
 
-            try (Statement tempSt = tempCon.createStatement();
-                 ResultSet rsDbs = tempSt.executeQuery("SHOW DATABASES")) {
+            // =========================================
+            // 1. FIND ALL SEMESTER DATABASES
+            // =========================================
 
-                while (rsDbs.next()) {
-                    String dbName = rsDbs.getString(1);
-                    String lowerDb = dbName.toLowerCase();
+            List<String> semesterDbs = new ArrayList<>();
 
-                    if (lowerDb.startsWith("1st_sy")
-                            || lowerDb.startsWith("2nd_sy")
-                            || lowerDb.startsWith("summer_sy")) {
+            try (Statement st = tempCon.createStatement();
+                 ResultSet rs = st.executeQuery("SHOW DATABASES")) {
+
+                while (rs.next()) {
+                    String dbName = rs.getString(1);
+                    String lower = dbName.toLowerCase();
+
+                    if (lower.startsWith("1st_sy")
+                            || lower.startsWith("2nd_sy")
+                            || lower.startsWith("summer_sy")) {
+
                         semesterDbs.add(dbName);
                     }
                 }
             }
 
+            java.util.Collections.sort(
+                    semesterDbs,
+                    String.CASE_INSENSITIVE_ORDER
+            );
+
+            if (semesterDbs.isEmpty()) {
+                throw new Exception("No semester databases were found.");
+            }
+
+            // =========================================
+            // 2. GET STUDENT INFORMATION
+            // =========================================
+
+            String studName = "";
+            String studCourse = "";
+            String studGender = "";
+            boolean studentFound = false;
+
+            for (String dbName : semesterDbs) {
+
+                String studentSql =
+                        "SELECT studname, studcrs, studgender " +
+                        "FROM `" + dbName + "`.students " +
+                        "WHERE studid = ?";
+
+                try (PreparedStatement ps =
+                             tempCon.prepareStatement(studentSql)) {
+
+                    ps.setInt(1, studentId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+
+                        if (rs.next()) {
+                            studName = rs.getString("studname");
+                            studCourse = rs.getString("studcrs");
+                            studGender = rs.getString("studgender");
+
+                            studentFound = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!studentFound) {
+                throw new Exception(
+                        "Student ID " + studId
+                        + " was not found in any semester database."
+                );
+            }
+
+            // =========================================
+            // 3. CREATE PDF
+            // =========================================
+
+            writer = PdfWriter.getInstance(
+                    doc,
+                    new FileOutputStream(pdfFile)
+            );
+
+            doc.open();
+
+            // =========================================
+            // 4. MAIN TITLE WITH LOGO
+            // =========================================
+
+            PdfPTable header = new PdfPTable(new float[]{1.2f, 5f});
+            header.setWidthPercentage(90f);
+            header.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+            String logoPath =
+                    "C:\\Users\\ychiong\\Documents\\NetBeansProjects\\Information-Managements\\src\\main\\java\\com\\mycompany\\enrollmentsystem\\Resources\\logo.png";
+
+            PdfPCell logoCell;
+
+            try {
+                com.itextpdf.text.Image logo =
+                        com.itextpdf.text.Image.getInstance(logoPath);
+
+                logo.scaleToFit(65f, 65f);
+
+                logoCell = new PdfPCell(logo);
+
+            } catch (Exception ex) {
+                logoCell = new PdfPCell(new Phrase(""));
+                System.err.println(
+                        "Logo could not be loaded: " + ex.getMessage()
+                );
+            }
+
+            logoCell.setBorder(Rectangle.NO_BORDER);
+            logoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+            PdfPCell titleCell = new PdfPCell(
+                    new Phrase(
+                            "ATENEO DE DAVAO UNIVERSITY",
+                            titleFont
+                    )
+            );
+
+            titleCell.setBorder(Rectangle.NO_BORDER);
+            titleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            titleCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+            header.addCell(logoCell);
+            header.addCell(titleCell);
+
+            doc.add(header);
+
+            // Official Transcript of Records
+            Paragraph subtitle = new Paragraph(
+                    "Official Transcript of Records",
+                    subtitleFont
+            );
+
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingBefore(5f);
+            subtitle.setSpacingAfter(20f);
+
+            doc.add(subtitle);
+
+            // =========================================
+            // 5. STUDENT INFORMATION
+            // =========================================
+
+            // These are Paragraphs with tab stops, NOT tables.
+
+            addTwoColumnParagraph(
+                    doc,
+                    "Student ID: " + studId,
+                    "Student Name: " + studName,
+                    boldFont
+            );
+
+            addTwoColumnParagraph(
+                    doc,
+                    "Student Course: " + studCourse,
+                    "Gender: " + studGender,
+                    boldFont
+            );
+
+            doc.add(new Paragraph("\n"));
+
+            // =========================================
+            // 6. GRADES TABLE
+            // =========================================
+
+            PdfPTable gradesTable = new PdfPTable(
+                    new float[]{1.1f, 1.3f, 3.8f, 1f, 0.9f}
+            );
+
+            gradesTable.setWidthPercentage(100f);
+            gradesTable.setSpacingBefore(5f);
+
+            addHeaderCell(
+                    gradesTable, "SubjID",
+                    Element.ALIGN_CENTER, headerFont
+            );
+
+            addHeaderCell(
+                    gradesTable, "SubjCode",
+                    Element.ALIGN_CENTER, headerFont
+            );
+
+            addHeaderCell(
+                    gradesTable, "Descriptive Title",
+                    Element.ALIGN_CENTER, headerFont
+            );
+
+            addHeaderCell(
+                    gradesTable, "Final",
+                    Element.ALIGN_CENTER, headerFont
+            );
+
+            addHeaderCell(
+                    gradesTable, "Credit",
+                    Element.ALIGN_CENTER, headerFont
+            );
+
             int totalSubjectsListed = 0;
 
-            // 7. Retrieve each semester's subjects and grades.
+            // =========================================
+            // 7. RETRIEVE SUBJECTS FROM EVERY SEMESTER
+            // =========================================
+
             for (String dbName : semesterDbs) {
+
                 String query =
-                        "SELECT s.subjid, s.subjcode, s.subjdesc, "
-                        + "s.subjunits, g.final "
-                        + "FROM `" + dbName + "`.enroll e "
-                        + "JOIN `" + dbName + "`.subjects s "
-                        + "ON e.subjid = s.subjid "
-                        + "LEFT JOIN `" + dbName + "`.grades g "
-                        + "ON e.eid = g.enroll_eid "
-                        + "WHERE e.studid = ?";
+                        "SELECT s.subjid, s.subjcode, " +
+                        "s.subjdesc, s.subjunits, g.final " +
+                        "FROM `" + dbName + "`.enroll e " +
+                        "JOIN `" + dbName + "`.subjects s " +
+                        "ON e.subjid = s.subjid " +
+                        "LEFT JOIN `" + dbName + "`.grades g " +
+                        "ON e.eid = g.enroll_eid " +
+                        "WHERE e.studid = ? " +
+                        "ORDER BY s.subjcode";
 
-                try (PreparedStatement pstmt = tempCon.prepareStatement(query)) {
-                    pstmt.setInt(1, studentId);
+                try (PreparedStatement ps =
+                             tempCon.prepareStatement(query)) {
 
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        boolean hasSemRows = false;
+                    ps.setInt(1, studentId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+
+                        boolean hasSubjects = false;
 
                         while (rs.next()) {
-                            if (!hasSemRows) {
-                                PdfPCell semCell = new PdfPCell(
-                                        new Phrase(dbName, bfBold10));
-                                semCell.setColspan(5);
-                                semCell.setBorder(Rectangle.NO_BORDER);
-                                semCell.setHorizontalAlignment(Element.ALIGN_LEFT);
-                                table.addCell(semCell);
-                                hasSemRows = true;
+
+                            // Display semester name in the SubjID column.
+                            if (!hasSubjects) {
+
+                                addSemesterCell(
+                                        gradesTable,
+                                        formatSemesterName(dbName),
+                                        headerFont
+                                );
+
+                                // Fill the remaining four columns.
+                                for (int i = 0; i < 4; i++) {
+                                    addSemesterBlankCell(gradesTable);
+                                }
+
+                                hasSubjects = true;
                             }
 
                             totalSubjectsListed++;
 
-                            String subjid = rs.getString("subjid");
-                            String subjcode = rs.getString("subjcode");
-                            String subjdesc = rs.getString("subjdesc");
-                            String units = String.valueOf(rs.getInt("subjunits"));
-                            String fin = rs.getString("final");
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getString("subjid"),
+                                    Element.ALIGN_CENTER,
+                                    normalFont
+                            );
 
-                            if (subjcode == null) {
-                                subjcode = "";
-                            }
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getString("subjcode"),
+                                    Element.ALIGN_CENTER,
+                                    normalFont
+                            );
 
-                            if (subjdesc == null) {
-                                subjdesc = "";
-                            }
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getString("subjdesc"),
+                                    Element.ALIGN_LEFT,
+                                    normalFont
+                            );
 
-                            if (fin == null || fin.trim().isEmpty()
-                                    || fin.equalsIgnoreCase("null")) {
-                                fin = "No Grade";
-                            }
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getObject("final") == null
+                                            ? "—"
+                                            : rs.getString("final"),
+                                    Element.ALIGN_CENTER,
+                                    normalFont
+                            );
 
-                            addBorderlessRowCell(table, subjid,
-                                    Element.ALIGN_CENTER, bf10);
-                            addBorderlessRowCell(table, subjcode,
-                                    Element.ALIGN_CENTER, bf10);
-                            addBorderlessRowCell(table, subjdesc,
-                                    Element.ALIGN_CENTER, bf10);
-                            addBorderlessRowCell(table, fin,
-                                    Element.ALIGN_CENTER, bf10);
-                            addBorderlessRowCell(table, units,
-                                    Element.ALIGN_CENTER, bf10);
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getObject("subjunits") == null
+                                            ? "—"
+                                            : rs.getString("subjunits"),
+                                    Element.ALIGN_CENTER,
+                                    normalFont
+                            );
                         }
                     }
-                } catch (Exception e) {
-                    // Skip semester databases that cannot be accessed.
-                    System.err.println("Could not read database "
-                            + dbName + ": " + e.getMessage());
+
+                } catch (Exception ex) {
+                    throw new Exception(
+                            "Could not retrieve grades from database "
+                            + dbName + ": " + ex.getMessage(),
+                            ex
+                    );
                 }
             }
 
-            doc.add(table);
+            doc.add(gradesTable);
+
+            // =========================================
+            // 8. NUMBER OF SUBJECTS
+            // =========================================
+
+            Paragraph subjectCount = new Paragraph(
+                    "Number of Subjects Listed: " + totalSubjectsListed,
+                    boldFont
+            );
+
+            subjectCount.setSpacingBefore(10f);
+            subjectCount.setSpacingAfter(10f);
+
+            doc.add(subjectCount);
+
+            // =========================================
+            // 9. HORIZONTAL SEPARATOR
+            // =========================================
+
+            doc.add(new com.itextpdf.text.pdf.draw.LineSeparator());
+
             doc.add(new Paragraph("\n"));
 
-            // 8. Subject count
-            Paragraph subjectCountPara = new Paragraph(
-                    "Number of Subjects Listed: " + totalSubjectsListed, bfBold11);
-            subjectCountPara.setIndentationLeft(30f);
-            doc.add(subjectCountPara);
+            // =========================================
+            // 10. GRADING SYSTEM
+            // =========================================
 
-            doc.add(new Paragraph("\n"));
+            PdfPTable gradingTable = new PdfPTable(2);
+            gradingTable.setWidthPercentage(100f);
 
-            // 9. Grading system
-            float[] legendWidths = {5f, 5f};
-            PdfPTable legendTable = new PdfPTable(legendWidths);
-            legendTable.setWidthPercentage(90f);
+            Font gradingTitleFont =
+                    new Font(FontFamily.TIMES_ROMAN, 9, Font.BOLD);
 
-            String oldGrading =
+            Font gradingFont =
+                    new Font(FontFamily.TIMES_ROMAN, 9);
+
+            String oldSystem =
                     "Grading System up to SY 1981-82\n\n"
                     + "95-100 = 1.0 = Excellent\n"
                     + "90-94 = 1.5 = Very Good\n"
@@ -277,8 +417,8 @@ public class TorPDF {
                     + "75-79 = 3.0 = Passed\n"
                     + "Below 75 = 5.0 = Failed";
 
-            String newGrading =
-                    "New Grading System (1st Sem. SY1982-83 & up)\n\n"
+            String newSystem =
+                    "New Grading System (1st Sem. SY 1982-83 & up)\n\n"
                     + "95-100 = 1.0 = Excellent\n"
                     + "90-94 = 1.5 = Very Good\n"
                     + "85-89 = 2.0 = Good\n"
@@ -286,64 +426,108 @@ public class TorPDF {
                     + "75-79 = 3.0 = Passed\n"
                     + "Below 75 = 5.0 = Failed";
 
-            addNoBorderCell(legendTable, oldGrading, bf9, Element.ALIGN_LEFT);
-            addNoBorderCell(legendTable, newGrading, bf9, Element.ALIGN_LEFT);
+            PdfPCell oldSystemCell = new PdfPCell(
+                    new Phrase(oldSystem, gradingFont)
+            );
 
-            doc.add(legendTable);
+            oldSystemCell.setBorder(Rectangle.NO_BORDER);
+            oldSystemCell.setPadding(3f);
 
-            Paragraph extraLegend = new Paragraph(
-                    "FOR FCF Grades: O - Outstanding, HS - Highly Satisfactory, "
-                    + "MS - Moderately Satisfactory, S - Satisfactory, "
-                    + "F - Fair, P - Poor\n"
-                    + "Quality Point Equivalent: 1.0 = 4.0, 1.5 = 3.5, "
-                    + "2.0 = 3.0, 2.5 = 2.5, 3.0 = 2.0",
-                    bf9);
-            extraLegend.setIndentationLeft(30f);
-            doc.add(extraLegend);
+            PdfPCell newSystemCell = new PdfPCell(
+                    new Phrase(newSystem, gradingFont)
+            );
 
-            doc.add(new Paragraph("\n\n"));
+            newSystemCell.setBorder(Rectangle.NO_BORDER);
+            newSystemCell.setPadding(3f);
 
-            // 10. Watermark disclaimer
-            Paragraph sealNotice =
-                    new Paragraph("NOT VALID WITHOUT SCHOOL SEAL", bfBold11);
-            sealNotice.setIndentationLeft(30f);
-            doc.add(sealNotice);
+            gradingTable.addCell(oldSystemCell);
+            gradingTable.addCell(newSystemCell);
 
-            doc.add(new Paragraph("\n\n"));
+            doc.add(gradingTable);
 
-            // 11. Signatures
-            float[] sigWidths = {5f, 5f};
-            PdfPTable sigTable = new PdfPTable(sigWidths);
-            sigTable.setWidthPercentage(90f);
+            Paragraph fcfGrades = new Paragraph(
+                    "FOR FCF Grades: O - Outstanding, "
+                    + "HS - Highly Satisfactory, "
+                    + "MS - Moderately Satisfactory, "
+                    + "S - Satisfactory, F - Fair, P - Poor",
+                    gradingFont
+            );
+
+            fcfGrades.setSpacingBefore(5f);
+            doc.add(fcfGrades);
+
+            Paragraph qualityPoints = new Paragraph(
+                    "Quality Point Equivalent: "
+                    + "1.0 = 4.0, 1.5 = 3.5, 2.0 = 3.0, "
+                    + "2.5 = 2.5, 3.0 = 2.0",
+                    gradingFont
+            );
+
+            qualityPoints.setSpacingBefore(3f);
+            doc.add(qualityPoints);
+
+            // =========================================
+            // 11. NOT VALID WITHOUT SCHOOL SEAL
+            // =========================================
+
+            Paragraph validity = new Paragraph(
+                    "NOT VALID WITHOUT SCHOOL SEAL",
+                    boldFont
+            );
+
+            validity.setAlignment(Element.ALIGN_CENTER);
+            validity.setSpacingBefore(15f);
+            validity.setSpacingAfter(20f);
+
+            doc.add(validity);
+
+            // =========================================
+            // 12. PREPARED BY AND CHECKED BY
+            // =========================================
+
+            addTwoColumnParagraph(
+                    doc,
+                    "Prepared By: JOHN D. DOE",
+                    "Checked By: JANE F. DOE",
+                    underlineFont
+            );
+
+            // =========================================
+            // 13. DATE AND REGISTRAR
+            // =========================================
 
             String currentDate =
-                    new SimpleDateFormat("MM/dd/yyyy").format(new Date());
+                    new SimpleDateFormat("MMMM dd, yyyy")
+                            .format(new Date());
 
-            addNoBorderCell(sigTable,
-                    "Prepared By: MARY ANN D. MATURAN\n"
-                    + "___________________________________\n\nDate: " + currentDate,
-                    bfBold10, Element.ALIGN_LEFT);
-
-            addNoBorderCell(sigTable,
-                    "Checked By: MYRNA VILLACOSA\n"
-                    + "___________________________________\n\n"
-                    + "Registrar: ATTY. EDGAR ESCALANTE\n"
-                    + "___________________________________",
-                    bfBold10, Element.ALIGN_LEFT);
-
-            doc.add(sigTable);
+            addTwoColumnParagraph(
+                    doc,
+                    "Date: " + currentDate,
+                    "Registrar: ATTY. EDGAR ALLEN POE",
+                    normalFont
+            );
 
         } catch (Exception e) {
+
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Failed to generate TOR: " + e.getMessage());
+
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Failed to generate TOR: " + e.getMessage(),
+                    "TOR Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+
+            return;
+
         } finally {
+
             if (doc.isOpen()) {
                 doc.close();
             }
 
-            if (docWriter != null) {
-                docWriter.close();
+            if (writer != null) {
+                writer.close();
             }
 
             if (tempCon != null) {
@@ -353,27 +537,119 @@ public class TorPDF {
                     e.printStackTrace();
                 }
             }
-
-            if (connected && es.con != null) {
-                try {
-                    es.con.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
-        // Open the generated PDF.
+        // =========================================
+        // 14. OPEN GENERATED PDF
+        // =========================================
+
         try {
             if (pdfFile.exists() && Desktop.isDesktopSupported()) {
                 Desktop.getDesktop().open(pdfFile);
             }
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "TOR was created, but could not be opened automatically."
+            );
+
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "TOR created, but it could not be opened automatically.");
         }
     }
+    
+    private static void addTwoColumnParagraph(
+        Document doc,
+        String leftText,
+        String rightText,
+        Font font) throws Exception {
+
+    PdfPTable layout = new PdfPTable(new float[]{1f, 1f});
+    layout.setWidthPercentage(100f);
+
+    PdfPCell leftCell = new PdfPCell(
+            new Phrase(leftText, font)
+    );
+
+    leftCell.setBorder(Rectangle.NO_BORDER);
+    leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+    leftCell.setPadding(3f);
+
+    PdfPCell rightCell = new PdfPCell(
+            new Phrase(rightText, font)
+    );
+
+    rightCell.setBorder(Rectangle.NO_BORDER);
+    rightCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+    rightCell.setPadding(3f);
+
+    layout.addCell(leftCell);
+    layout.addCell(rightCell);
+
+    doc.add(layout);
+}
+
+
+// Creates the semester heading in the first column.
+private static void addSemesterCell(
+        PdfPTable table,
+        String semester,
+        Font font) {
+
+    PdfPCell cell = new PdfPCell(
+            new Phrase(semester, font)
+    );
+
+    cell.setBackgroundColor(new BaseColor(230, 230, 230));
+    cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+    cell.setPadding(5f);
+
+    table.addCell(cell);
+}
+
+
+// Adds the remaining blank cells beside the semester name.
+private static void addSemesterBlankCell(PdfPTable table) {
+
+    PdfPCell cell = new PdfPCell(new Phrase(""));
+
+    cell.setBackgroundColor(new BaseColor(230, 230, 230));
+    cell.setPadding(5f);
+
+    table.addCell(cell);
+}
+
+
+// Converts database names into readable semester names.
+private static String formatSemesterName(String dbName) {
+
+    String lower = dbName.toLowerCase();
+
+    String semester;
+
+    if (lower.startsWith("1st_sy")) {
+        semester = "1st Semester";
+    } else if (lower.startsWith("2nd_sy")) {
+        semester = "2nd Semester";
+    } else if (lower.startsWith("summer_sy")) {
+        semester = "Summer";
+    } else {
+        semester = dbName;
+    }
+
+    java.util.regex.Matcher matcher =
+            java.util.regex.Pattern.compile(
+                    "(?i)(?:1st|2nd|summer)_sy(\\d{4}_\\d{4})"
+            ).matcher(dbName);
+
+    if (matcher.find()) {
+        String schoolYear = matcher.group(1).replace("_", "-");
+        return semester + " - SY " + schoolYear;
+    }
+
+    return semester;
+}
+
 
     private static void addHeaderCell(
             PdfPTable table, String text, int align, Font font) {
@@ -385,14 +661,22 @@ public class TorPDF {
         table.addCell(cell);
     }
 
+    
     private static void addBorderlessRowCell(
             PdfPTable table, String text, int align, Font font) {
 
-        PdfPCell cell = new PdfPCell(new Phrase(text == null ? "" : text, font));
+        PdfPCell cell = new PdfPCell(
+                new Phrase(text == null ? "" : text, font)
+        );
+
         cell.setHorizontalAlignment(align);
-        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(5);
+
         table.addCell(cell);
     }
+
 
     private static void addNoBorderCell(
             PdfPTable table, String text, Font font, int align) {
