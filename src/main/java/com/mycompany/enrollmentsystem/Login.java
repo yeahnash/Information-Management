@@ -414,9 +414,10 @@ public class Login extends javax.swing.JFrame {
             }
 
             try {
-                TorPDF.generateAndOpenTORForSelectedDatabase(
-                        selectedDb, digits.toString()
+                StudentPDF.generateAndOpenPDF(
+                        digits.toString(), selectedDb
                 );
+
             } catch (Exception e) {
                 javax.swing.JOptionPane.showMessageDialog(
                         this,
