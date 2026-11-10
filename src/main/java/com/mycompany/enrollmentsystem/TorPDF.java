@@ -83,9 +83,9 @@ public class TorPDF {
             }
 
             // Sort semester databases for consistent report order.
-            java.util.Collections.sort(
-                    semesterDbs,
-                    String.CASE_INSENSITIVE_ORDER
+            // Sort databases chronologically.
+            semesterDbs.sort((a, b) ->
+                    Long.compare(getSemesterSortKey(a), getSemesterSortKey(b))
             );
 
             if (semesterDbs.isEmpty()) {
@@ -116,7 +116,7 @@ public class TorPDF {
             header.setHorizontalAlignment(Element.ALIGN_CENTER);
 
             // PASTE YOUR LOGO IMAGE PATH HERE.
-            String logoPath = "C:\\Users\\Admin\\OneDrive\\Documents\\NetBeansProjects\\EnrollmentSystem\\src\\main\\java\\com\\mycompany\\enrollmentsystem\\Resources\\logo.png";
+            String logoPath = "C:\\Users\\ychiong\\Documents\\NetBeansProjects\\Information-Management\\src\\main\\java\\com\\mycompany\\enrollmentsystem\\Resources\\logo.png";
 
             PdfPCell logoCell;
 
@@ -186,7 +186,6 @@ public class TorPDF {
                             studCourse = rs.getString("studcrs");
                             studYear = rs.getString("yrlvl");
                             studentFound = true;
-                            break;
                         }
                     }
                 }
@@ -390,78 +389,102 @@ public class TorPDF {
             doc.add(gradesTable);
             doc.add(new Paragraph("\n"));
             
+            
             // =========================================
-            // 6. GRADING SYSTEM (QPI)
+            // 6. GRADING SYSTEM
             // =========================================
 
             Paragraph gradingTitle = new Paragraph(
-                    "GRADING SYSTEM (QUALITY POINT INDEX)",
+                    "GRADING SYSTEM",
                     boldFont
             );
 
             gradingTitle.setAlignment(Element.ALIGN_CENTER);
+            gradingTitle.setSpacingAfter(8f);
             doc.add(gradingTitle);
 
-            PdfPTable qpiTable = new PdfPTable(
-                    new float[]{1.5f, 2f, 3f}
+            // Two-column layout
+            PdfPTable gradingTable = new PdfPTable(2);
+            gradingTable.setWidthPercentage(100f);
+            gradingTable.setWidths(new float[]{1f, 1f});
+
+            // LEFT COLUMN: OLD GRADING SYSTEM
+            PdfPCell oldSystemCell = new PdfPCell();
+            oldSystemCell.setBorder(Rectangle.NO_BORDER);
+            oldSystemCell.setPadding(5f);
+
+            Paragraph oldTitle = new Paragraph(
+                    "Grading System up to SY 1981-82",
+                    boldFont
             );
+            oldSystemCell.addElement(oldTitle);
 
-            qpiTable.setWidthPercentage(65f);
-            qpiTable.setHorizontalAlignment(Element.ALIGN_CENTER);
+            oldSystemCell.addElement(new Paragraph(
+                    "95-100 = 1.0 = Excellent", normalFont));
+            oldSystemCell.addElement(new Paragraph(
+                    "90-94 = 1.5 = Very Good", normalFont));
+            oldSystemCell.addElement(new Paragraph(
+                    "85-89 = 2.0 = Good", normalFont));
+            oldSystemCell.addElement(new Paragraph(
+                    "80-84 = 2.5 = Fair", normalFont));
+            oldSystemCell.addElement(new Paragraph(
+                    "75-79 = 3.0 = Passed", normalFont));
+            oldSystemCell.addElement(new Paragraph(
+                    "Below 75 = 5.0 = Failed", normalFont));
 
-            // Headers
-            addHeaderCell(qpiTable, "Letter Grade",
-                    Element.ALIGN_CENTER, boldFont);
+            gradingTable.addCell(oldSystemCell);
 
-            addHeaderCell(qpiTable, "QPI Equivalent",
-                    Element.ALIGN_CENTER, boldFont);
+            // RIGHT COLUMN: NEW GRADING SYSTEM
+            PdfPCell newSystemCell = new PdfPCell();
+            newSystemCell.setBorder(Rectangle.NO_BORDER);
+            newSystemCell.setPadding(5f);
 
-            addHeaderCell(qpiTable, "Description",
-                    Element.ALIGN_CENTER, boldFont);
+            Paragraph newTitle = new Paragraph(
+                    "New Grading System (1st Sem. SY 1982-83 & up)",
+                    boldFont
+            );
+            newSystemCell.addElement(newTitle);
 
-            // Grading scale
-            String[][] qpiGrades = {
-                {"A", "4.0", "Excellent"},
-                {"B+", "3.5", "Very Good"},
-                {"B", "3.0", "Good"},
-                {"C+", "2.5", "Satisfactory"},
-                {"C", "2.0", "Acceptable"},
-                {"D", "1.0", "Minimal Pass"},
-                {"F", "0", "Failure"},
-                {"FD", "0", "Failure Debarred"},
-                {"WP", "Not counted", "Withdrawn with Permission"},
-                {"No Grade", "0", "No Grade"}
-            };
+            newSystemCell.addElement(new Paragraph(
+                    "95-100 = 1.0 = Excellent", normalFont));
+            newSystemCell.addElement(new Paragraph(
+                    "90-94 = 1.5 = Very Good", normalFont));
+            newSystemCell.addElement(new Paragraph(
+                    "85-89 = 2.0 = Good", normalFont));
+            newSystemCell.addElement(new Paragraph(
+                    "80-84 = 2.5 = Fair", normalFont));
+            newSystemCell.addElement(new Paragraph(
+                    "75-79 = 3.0 = Passed", normalFont));
+            newSystemCell.addElement(new Paragraph(
+                    "Below 75 = 5.0 = Failed", normalFont));
 
-            for (String[] grade : qpiGrades) {
+            gradingTable.addCell(newSystemCell);
 
-                for (String value : grade) {
+            doc.add(gradingTable);
 
-                    PdfPCell cell = new PdfPCell(
-                            new Phrase(value, normalFont)
-                    );
-
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-                    cell.setPadding(5f);
-
-                    qpiTable.addCell(cell);
-                }
-            }
-
-            doc.add(qpiTable);
-            
-            Paragraph qpiFormula = new Paragraph(
-                    "QPI = Total Quality Points / Total Number of Units",
+            // FCF GRADES
+            Paragraph fcfGrades = new Paragraph(
+                    "FOR FCF Grades: O - Outstanding, HS - Highly Satisfactory, "
+                    + "MS - Moderately Satisfactory, S - Satisfactory, "
+                    + "F - Fair, P - Poor",
                     normalFont
             );
 
-qpiFormula.setAlignment(Element.ALIGN_CENTER);
-doc.add(qpiFormula);
+            fcfGrades.setSpacingBefore(5f);
+            doc.add(fcfGrades);
 
-doc.add(new Paragraph("\n"));
+            // QUALITY POINT EQUIVALENT
+            Paragraph qpe = new Paragraph(
+                    "Quality Point Equivalent: 1.0 = 4.0, 1.5 = 3.5, "
+                    + "2.0 = 3.0, 2.5 = 2.5, 3.0 = 2.0",
+                    normalFont
+            );
+
+            qpe.setSpacingBefore(3f);
+            doc.add(qpe);
 
             doc.add(new Paragraph("\n"));
+
 
             // =========================================
             // 7. SCHOOL SEAL NOTICE
@@ -570,6 +593,38 @@ doc.add(new Paragraph("\n"));
             );
             e.printStackTrace();
         }
+    }
+    
+    private static long getSemesterSortKey(String dbName) {
+
+        java.util.regex.Matcher matcher =
+                java.util.regex.Pattern.compile(
+                        "(?i)(1st|2nd|summer)_sy(\\d{4})_(\\d{4})"
+                ).matcher(dbName);
+
+        if (matcher.find()) {
+
+            String semester = matcher.group(1).toLowerCase();
+            int year = Integer.parseInt(matcher.group(2));
+
+            int semesterOrder;
+
+            switch (semester) {
+                case "1st":
+                    semesterOrder = 1;
+                    break;
+                case "2nd":
+                    semesterOrder = 2;
+                    break;
+                default:
+                    semesterOrder = 3;
+                    break;
+            }
+
+            return (long) year * 10 + semesterOrder;
+        }
+
+        return 0;
     }
 
     

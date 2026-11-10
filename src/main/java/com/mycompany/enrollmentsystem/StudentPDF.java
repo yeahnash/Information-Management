@@ -96,7 +96,7 @@ public class StudentPDF {
             header.setWidthPercentage(85f);
 
             String logoPath =
-                    "C:\\Users\\Admin\\OneDrive\\Documents\\NetBeansProjects\\EnrollmentSystem\\src\\main\\java\\com\\mycompany\\enrollmentsystem\\Resources\\logo.png";
+                    "C:\\Users\\ychiong\\Documents\\NetBeansProjects\\Information-Management\\src\\main\\java\\com\\mycompany\\enrollmentsystem\\Resources\\logo.png";
 
             PdfPCell logoCell;
 

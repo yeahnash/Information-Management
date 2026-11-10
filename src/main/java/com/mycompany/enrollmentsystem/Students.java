@@ -12,6 +12,8 @@ package com.mycompany.enrollmentsystem;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 public class Students {
     public void newstudent(String studname, String studadd,
@@ -115,38 +117,133 @@ public class Students {
         }
     }
     
+    
     public void edit_student(int studID, String studName, String studAdd,
-                            String studCrs, String studGender, String yrLvl) {
+                             String studCrs, String studGender, String yrLvl) {
 
-       EnrollmentSystem b = new EnrollmentSystem();
+        // Get the logged-in admin's MySQL credentials
+        String adminUser = EnrollmentSystem.currentUser;
+        String adminPass = EnrollmentSystem.currentPassword;
 
-       if (!b.DBConnect()) {
-           System.out.println("Database connection failed!");
-           return;
-       }
+        if (adminUser == null || adminUser.isEmpty()) {
+            adminUser = "root";
+        }
 
-       String query = "UPDATE students SET studName = ?, studAdd = ?, studCrs = ?, "
-               + "studGender = ?, yrLvl = ? WHERE studID = ?";
+        if (adminPass == null || adminPass.isEmpty()) {
+            adminPass = "root";
+        }
 
-       try {
-           java.sql.PreparedStatement ps = b.con.prepareStatement(query);
+        // Get all existing semester databases
+        java.util.ArrayList<String> semesterDBs =
+                EnrollmentSystem.getDatabases();
 
-           ps.setString(1, studName);
-           ps.setString(2, studAdd);
-           ps.setString(3, studCrs);
-           ps.setString(4, studGender);
-           ps.setString(5, yrLvl);
-           ps.setInt(6, studID);
+        if (semesterDBs.isEmpty()) {
+            System.out.println("No semester databases found!");
+            return;
+        }
 
-           int rows = ps.executeUpdate();
+        int updatedCount = 0;
+        int errorCount = 0;
 
-           if (rows > 0) {
-               System.out.println("Student updated successfully!");
-           }
+        // Visit each semester database
+        for (String database : semesterDBs) {
 
-       } catch (Exception e) {
-           System.out.println("Not successful.");
-           e.printStackTrace();
-       }
-   }
+            String url = "jdbc:mysql://localhost:3306/"
+                    + database
+                    + "?zeroDateTimeBehavior=CONVERT_TO_NULL";
+
+            try (Connection con = DriverManager.getConnection(
+                        url, adminUser, adminPass)) {
+
+                // Check whether this student exists in this database
+                String checkQuery =
+                        "SELECT studid FROM students WHERE studid = ?";
+
+                boolean studentExists;
+
+                try (java.sql.PreparedStatement checkPS =
+                             con.prepareStatement(checkQuery)) {
+
+                    checkPS.setInt(1, studID);
+
+                    try (ResultSet rs = checkPS.executeQuery()) {
+                        studentExists = rs.next();
+                    }
+                }
+
+                // Update only if the student exists
+                if (studentExists) {
+
+                    String updateQuery =
+                            "UPDATE students SET "
+                            + "studName = ?, "
+                            + "studAdd = ?, "
+                            + "studCrs = ?, "
+                            + "studGender = ?, "
+                            + "yrLvl = ? "
+                            + "WHERE studID = ?";
+
+                    try (java.sql.PreparedStatement ps =
+                                 con.prepareStatement(updateQuery)) {
+
+                        ps.setString(1, studName);
+                        ps.setString(2, studAdd);
+                        ps.setString(3, studCrs);
+                        ps.setString(4, studGender);
+                        ps.setString(5, yrLvl);
+                        ps.setInt(6, studID);
+
+                        ps.executeUpdate();
+
+                        updatedCount++;
+
+                        System.out.println(
+                                "Student updated in: " + database
+                        );
+                    }
+                }
+
+            } catch (Exception e) {
+
+                errorCount++;
+
+                System.out.println(
+                        "Failed to update database: " + database
+                );
+
+                e.printStackTrace();
+            }
+        }
+
+        // Display the final result
+        if (updatedCount > 0) {
+
+            System.out.println(
+                    "Student information updated successfully!"
+            );
+
+            System.out.println(
+                    "Student ID: " + studID
+            );
+
+            System.out.println(
+                    "Number of semester databases updated: "
+                    + updatedCount
+            );
+
+        } else {
+
+            System.out.println(
+                    "Student ID " + studID
+                    + " was not found in any semester database."
+            );
+        }
+
+        if (errorCount > 0) {
+            System.out.println(
+                    "Number of databases with errors: " + errorCount
+            );
+        }
+    }
+
 }
