@@ -140,7 +140,7 @@ public class TorPDF {
 
             PdfPCell collegeCell = new PdfPCell(
                     new Phrase(
-                            "INTERNATIONAL STATE COLLEGE OF THE PHILIPPINES",
+                            "Ateneo de Davao University",
                             titleFont
                     )
             );
@@ -155,7 +155,7 @@ public class TorPDF {
             doc.add(header);
 
             Paragraph subtitle = new Paragraph(
-                    "Student Grade Sheet",
+                    "Official Transcript of Records",
                     subtitleFont
             );
 
@@ -265,7 +265,7 @@ public class TorPDF {
             // =========================================
 
             PdfPTable gradesTable = new PdfPTable(
-                    new float[]{1.5f, 2.5f, 1.5f, 1.5f, 1.5f, 1.5f}
+                    new float[]{1.2f, 1.8f, 4f, 1.5f, 1.2f}
             );
 
             gradesTable.setWidthPercentage(90f);
@@ -276,16 +276,13 @@ public class TorPDF {
             addHeaderCell(gradesTable, "SubjCode",
                     Element.ALIGN_CENTER, boldFont);
 
-            addHeaderCell(gradesTable, "Prelim",
-                    Element.ALIGN_CENTER, boldFont);
-
-            addHeaderCell(gradesTable, "Midterm",
-                    Element.ALIGN_CENTER, boldFont);
-
-            addHeaderCell(gradesTable, "Prefinal",
+            addHeaderCell(gradesTable, "Descriptive Title",
                     Element.ALIGN_CENTER, boldFont);
 
             addHeaderCell(gradesTable, "Final",
+                    Element.ALIGN_CENTER, boldFont);
+
+            addHeaderCell(gradesTable, "Credit",
                     Element.ALIGN_CENTER, boldFont);
 
             int totalSubjectsListed = 0;
@@ -297,8 +294,8 @@ public class TorPDF {
             for (String dbName : semesterDbs) {
 
                 String query =
-                        "SELECT s.subjid, s.subjcode, " +
-                        "g.prelim, g.midterm, g.prefinal, g.final " +
+                        "SELECT s.subjid, s.subjcode, s.subjdesc, " +
+                        "g.final, s.subjunits " +
                         "FROM `" + dbName + "`.enroll e " +
                         "JOIN `" + dbName + "`.subjects s " +
                         "ON e.subjid = s.subjid " +
@@ -320,10 +317,13 @@ public class TorPDF {
 
                             if (!hasSubjects) {
                                 PdfPCell semesterCell = new PdfPCell(
-                                        new Phrase(dbName, boldFont)
+                                        new Phrase(
+                                                formatSemesterName(dbName),
+                                                boldFont
+                                        )
                                 );
 
-                                semesterCell.setColspan(6);
+                                semesterCell.setColspan(5);
                                 semesterCell.setHorizontalAlignment(
                                         Element.ALIGN_LEFT
                                 );
@@ -354,39 +354,31 @@ public class TorPDF {
 
                             addBorderlessRowCell(
                                     gradesTable,
-                                    rs.getString("prelim") == null
-                                            ? "—" : rs.getString("prelim"),
-                                    Element.ALIGN_CENTER,
-                                    normalFont
-                            );
-
-                            addBorderlessRowCell(
-                                    gradesTable,
-                                    rs.getString("midterm") == null
-                                            ? "—" : rs.getString("midterm"),
-                                    Element.ALIGN_CENTER,
-                                    normalFont
-                            );
-
-                            addBorderlessRowCell(
-                                    gradesTable,
-                                    rs.getString("prefinal") == null
-                                            ? "—" : rs.getString("prefinal"),
-                                    Element.ALIGN_CENTER,
+                                    rs.getString("subjdesc") == null
+                                            ? "-" : rs.getString("subjdesc"),
+                                    Element.ALIGN_LEFT,
                                     normalFont
                             );
 
                             addBorderlessRowCell(
                                     gradesTable,
                                     rs.getString("final") == null
-                                            ? "—" : rs.getString("final"),
+                                            ? "-" : rs.getString("final"),
+                                    Element.ALIGN_CENTER,
+                                    normalFont
+                            );
+
+                            addBorderlessRowCell(
+                                    gradesTable,
+                                    rs.getString("subjunits") == null
+                                            ? "-" : rs.getString("subjunits"),
                                     Element.ALIGN_CENTER,
                                     normalFont
                             );
                         }
                     }
+
                 } catch (Exception ex) {
-                    // Do not silently skip a semester.
                     throw new Exception(
                             "Could not retrieve grades from database "
                             + dbName + ": " + ex.getMessage(),
@@ -397,43 +389,142 @@ public class TorPDF {
 
             doc.add(gradesTable);
             doc.add(new Paragraph("\n"));
-
+            
             // =========================================
-            // 6. NUMBER OF SUBJECTS
+            // 6. GRADING SYSTEM (QPI)
             // =========================================
 
-            Paragraph subjectCount = new Paragraph(
-                    "Number of Subjects Listed: " + totalSubjectsListed,
+            Paragraph gradingTitle = new Paragraph(
+                    "GRADING SYSTEM (QUALITY POINT INDEX)",
                     boldFont
             );
 
-            subjectCount.setIndentationLeft(35f);
-            doc.add(subjectCount);
+            gradingTitle.setAlignment(Element.ALIGN_CENTER);
+            doc.add(gradingTitle);
+
+            PdfPTable qpiTable = new PdfPTable(
+                    new float[]{1.5f, 2f, 3f}
+            );
+
+            qpiTable.setWidthPercentage(65f);
+            qpiTable.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+            // Headers
+            addHeaderCell(qpiTable, "Letter Grade",
+                    Element.ALIGN_CENTER, boldFont);
+
+            addHeaderCell(qpiTable, "QPI Equivalent",
+                    Element.ALIGN_CENTER, boldFont);
+
+            addHeaderCell(qpiTable, "Description",
+                    Element.ALIGN_CENTER, boldFont);
+
+            // Grading scale
+            String[][] qpiGrades = {
+                {"A", "4.0", "Excellent"},
+                {"B+", "3.5", "Very Good"},
+                {"B", "3.0", "Good"},
+                {"C+", "2.5", "Satisfactory"},
+                {"C", "2.0", "Acceptable"},
+                {"D", "1.0", "Minimal Pass"},
+                {"F", "0", "Failure"},
+                {"FD", "0", "Failure Debarred"},
+                {"WP", "Not counted", "Withdrawn with Permission"},
+                {"No Grade", "0", "No Grade"}
+            };
+
+            for (String[] grade : qpiGrades) {
+
+                for (String value : grade) {
+
+                    PdfPCell cell = new PdfPCell(
+                            new Phrase(value, normalFont)
+                    );
+
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setPadding(5f);
+
+                    qpiTable.addCell(cell);
+                }
+            }
+
+            doc.add(qpiTable);
+            
+            Paragraph qpiFormula = new Paragraph(
+                    "QPI = Total Quality Points / Total Number of Units",
+                    normalFont
+            );
+
+qpiFormula.setAlignment(Element.ALIGN_CENTER);
+doc.add(qpiFormula);
+
+doc.add(new Paragraph("\n"));
+
+            doc.add(new Paragraph("\n"));
+
+            // =========================================
+            // 7. SCHOOL SEAL NOTICE
+            // =========================================
+
+            Paragraph sealNotice = new Paragraph(
+                    "NOT VALID WITHOUT SCHOOL SEAL",
+                    boldFont
+            );
+
+            sealNotice.setAlignment(Element.ALIGN_CENTER);
+            doc.add(sealNotice);
 
             doc.add(new Paragraph("\n\n"));
 
             // =========================================
-            // 7. REGISTRAR SIGNATURE
+            // 8. PREPARATION AND REGISTRAR DETAILS
             // =========================================
 
-            PdfPTable signatureTable = new PdfPTable(1);
-            signatureTable.setWidthPercentage(90f);
+            // Get the current date automatically.
+            String currentDate = new SimpleDateFormat(
+                    "MMMM dd, yyyy"
+            ).format(new Date());
 
-            PdfPCell signatureCell = new PdfPCell(
-                    new Phrase(
-                            "\n\n"
-                            + "________________________________________\n"
-                            + "REGISTRAR'S SIGNATURE",
-                            boldFont
-                    )
+            PdfPTable footerTable = new PdfPTable(
+                    new float[]{1f, 1f}
             );
 
-            signatureCell.setBorder(Rectangle.NO_BORDER);
-            signatureCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            signatureCell.setPaddingRight(25f);
+            footerTable.setWidthPercentage(90f);
 
-            signatureTable.addCell(signatureCell);
-            doc.add(signatureTable);
+            // Prepared By
+            PdfPCell preparedCell = new PdfPCell(
+                    new Phrase("Prepared By: ____________________", normalFont)
+            );
+            preparedCell.setBorder(Rectangle.NO_BORDER);
+            preparedCell.setPadding(8f);
+            footerTable.addCell(preparedCell);
+
+            // Date
+            PdfPCell dateCell = new PdfPCell(
+                    new Phrase("Date: " + currentDate, normalFont)
+            );
+            dateCell.setBorder(Rectangle.NO_BORDER);
+            dateCell.setPadding(8f);
+            footerTable.addCell(dateCell);
+
+            // Checked By
+            PdfPCell checkedCell = new PdfPCell(
+                    new Phrase("Checked By: _____________________", normalFont)
+            );
+            checkedCell.setBorder(Rectangle.NO_BORDER);
+            checkedCell.setPadding(8f);
+            footerTable.addCell(checkedCell);
+
+            // Registrar
+            PdfPCell registrarCell = new PdfPCell(
+                    new Phrase("Registrar: ________________________", normalFont)
+            );
+            registrarCell.setBorder(Rectangle.NO_BORDER);
+            registrarCell.setPadding(8f);
+            footerTable.addCell(registrarCell);
+
+            doc.add(footerTable);
 
         } catch (Exception e) {
 

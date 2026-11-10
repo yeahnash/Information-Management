@@ -120,7 +120,7 @@ public class StudentPDF {
 
             PdfPCell collegeCell = new PdfPCell(
                     new Phrase(
-                            "INTERNATIONAL STATE COLLEGE OF THE PHILIPPINES",
+                            "Ateneo De Davao University",
                             titleFont
                     )
             );
@@ -305,8 +305,8 @@ public class StudentPDF {
             PdfPCell signatureCell = new PdfPCell(
                     new Phrase(
                             "\n\n"
-                            + "________________________________________\n"
-                            + "REGISTRAR'S SIGNATURE",
+                            + "_____________________\n"
+                            + "REGISTRAR",
                             boldFont
                     )
             );
