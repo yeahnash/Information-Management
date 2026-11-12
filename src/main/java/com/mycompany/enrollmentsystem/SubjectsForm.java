@@ -58,6 +58,8 @@ public class SubjectsForm extends javax.swing.JFrame {
      */
     public SubjectsForm() {
         initComponents();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         DefaultTableModel tblmodel =
                 (DefaultTableModel) jTable1.getModel();

@@ -112,6 +112,8 @@ public class Login extends javax.swing.JFrame {
                 }
             }
         });
+        // Enter key initially triggers the Login button
+        getRootPane().setDefaultButton(loginbtn);
     }
     
 
@@ -232,10 +234,12 @@ public class Login extends javax.swing.JFrame {
     
     private void passwordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_passwordActionPerformed
         // TODO add your handling code here:
+        loginbtn.doClick();
     }//GEN-LAST:event_passwordActionPerformed
 
     private void usernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_usernameActionPerformed
         // TODO add your handling code here:
+        password.requestFocusInWindow();
     }//GEN-LAST:event_usernameActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -315,6 +319,11 @@ public class Login extends javax.swing.JFrame {
 
                 return;
             }
+            // Change the Enter key action to Submit
+            getRootPane().setDefaultButton(submitDBbtn);
+
+            // Move focus to the database selection
+            jComboBox1.requestFocusInWindow();
 
         } else {
 

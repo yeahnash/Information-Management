@@ -90,31 +90,59 @@ public class Students {
          }
      }
     
-    public void delete_student(int studID) {
+    public boolean delete_student(int studID) {
         EnrollmentSystem b = new EnrollmentSystem();
 
-        if (!b.DBConnect()) return;
+        if (!b.DBConnect()) return false;
 
-        try {
-            // Drop dependencies first to prevent constraint errors
-            try (PreparedStatement ps = b.con.prepareStatement("DELETE FROM enroll WHERE studid = ?")) {
-                ps.setInt(1, studID);
-                ps.executeUpdate();
-            }
+        try (Connection connection = b.con) {
+            connection.setAutoCommit(false);
 
-            try (PreparedStatement ps = b.con.prepareStatement("DELETE FROM students WHERE studID = ?")) {
-                ps.setInt(1, studID);
-                int rows = ps.executeUpdate();
-
-                if (rows > 0) {
-                    System.out.println("Student deleted successfully!");
-                    b.dropDatabaseUser(String.valueOf(studID)); // Now only uses ID
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM grades WHERE enroll_eid IN "
+                                + "(SELECT eid FROM enroll WHERE studid = ?)")) {
+                    ps.setInt(1, studID);
+                    ps.executeUpdate();
                 }
+
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM enroll WHERE studid = ?")) {
+                    ps.setInt(1, studID);
+                    ps.executeUpdate();
+                }
+
+                int rows;
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM students WHERE studid = ?")) {
+                    ps.setInt(1, studID);
+                    rows = ps.executeUpdate();
+                }
+
+                if (rows == 0) {
+                    connection.rollback();
+                    return false;
+                }
+
+                connection.commit();
+            } catch (java.sql.SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (java.sql.SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
             }
-        } catch (Exception e) {
-            System.out.println("Not successful!");
+        } catch (java.sql.SQLException e) {
+            System.out.println("Failed to delete student " + studID + ".");
             e.printStackTrace();
+            return false;
         }
+
+        if (!b.dropDatabaseUser(String.valueOf(studID))) {
+            System.out.println("Student was deleted, but their MySQL account could not be removed.");
+        }
+        return true;
     }
     
     

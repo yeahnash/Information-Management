@@ -66,6 +66,8 @@ public class StudentsForm extends javax.swing.JFrame {
      */
     public StudentsForm() {
         initComponents();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         DefaultTableModel tblmodel =
                 (DefaultTableModel) showsubjTable.getModel();
@@ -409,8 +411,16 @@ public class StudentsForm extends javax.swing.JFrame {
         if ("".equals(studID.getText()) ) {
             messagebox("Select a Student to Delete first","Delete");
         } else {
-            // Pass ONLY the student ID to match the updated deletion logic
-            b.delete_student(Integer.parseInt(studID.getText()));
+            if (b.delete_student(Integer.parseInt(studID.getText()))) {
+                messagebox("Student deleted successfully.", "Delete");
+            } else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Student could not be deleted. Check the application log for details.",
+                        "Delete Failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
         showRecords();
     }//GEN-LAST:event_deletebtnMouseClicked
@@ -488,8 +498,13 @@ public class StudentsForm extends javax.swing.JFrame {
         int i = okcancel("Enroll student ID: " + stdID + " to subject ID: " + a.getsubjID());
         if (i == 0) {
             String result = a.enrollStud(Integer.parseInt(stdID));
-            if (result.equals("Student is already Enrolled in this subject.")) {
-                messagebox(result, "Enrollment Failed");
+            if (result.startsWith("Error, ")) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        result,
+                        "Enrollment Failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
             } else {
                 messagebox(result, "Success!!");
                 showEnrollRec();
