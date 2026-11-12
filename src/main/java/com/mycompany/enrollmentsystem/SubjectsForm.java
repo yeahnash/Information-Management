@@ -58,6 +58,8 @@ public class SubjectsForm extends javax.swing.JFrame {
      */
     public SubjectsForm() {
         initComponents();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         DefaultTableModel tblmodel =
                 (DefaultTableModel) jTable1.getModel();
@@ -343,10 +345,16 @@ public class SubjectsForm extends javax.swing.JFrame {
 
     private void deletebtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deletebtnMouseClicked
         Subjects b = new Subjects();
-        if ("".equals(subjID.getText()) )
+        if ("".equals(subjID.getText())) {
             messagebox("Select a Subject to Delete first","Delete");
-        else
-            b.delete_subject(Integer.parseInt(subjID.getText()));
+            return;
+        }
+
+        if (b.delete_subject(Integer.parseInt(subjID.getText()))) {
+            messagebox("Subject deleted successfully.", "Delete");
+        } else {
+            messagebox("Subject could not be deleted.", "Delete");
+        }
         
         showRecords();
         // TODO add your handling code here:

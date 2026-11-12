@@ -10,11 +10,14 @@ import java.util.ArrayList;
  */
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Calendar;
 
 public class EnrollmentSystem {
+
+    private static final String SCHEDULE_PROCEDURE_VERSION = "schedule-format-v2";
 
     Connection con;
     Statement st;
@@ -55,23 +58,16 @@ public class EnrollmentSystem {
                     + "WHERE SCHEMA_NAME = '" + dbName + "'";
 
             rs = st.executeQuery(checkDB);
+            boolean databaseExists = rs.next();
 
-            if (rs.next()) {
+            if (databaseExists) {
                 System.out.println("Database already exists: " + dbName);
-
-                // Restore the previously selected database
-                db = oldDB;
-
-                return null;
+                st.executeUpdate("USE `" + dbName + "`");
+            } else {
+                // Create and select the new database
+                st.executeUpdate("CREATE DATABASE `" + dbName + "`");
+                st.executeUpdate("USE `" + dbName + "`");
             }
-
-            // Create database
-            String query = "CREATE DATABASE `" + dbName + "`";
-            st.executeUpdate(query);
-
-            // Use database
-            String query2 = "USE `" + dbName + "`";
-            st.executeUpdate(query2);
 
             String query3 = """
                                 CREATE TABLE students (
@@ -84,7 +80,7 @@ public class EnrollmentSystem {
                                     PRIMARY KEY (studid)
                                 ) AUTO_INCREMENT = 1001;
                                 """;
-            st.executeUpdate(query3);
+            if (!databaseExists) st.executeUpdate(query3);
 
             String query4 = """
                                 CREATE TABLE subjects (
@@ -96,7 +92,7 @@ public class EnrollmentSystem {
                                     PRIMARY KEY (subjid)
                                 ) AUTO_INCREMENT = 2001;
                                 """;
-            st.executeUpdate(query4);
+            if (!databaseExists) st.executeUpdate(query4);
 
             String query5 = """
                                 CREATE TABLE teachers (
@@ -109,7 +105,7 @@ public class EnrollmentSystem {
                                     PRIMARY KEY (tid)
                                 ) AUTO_INCREMENT = 3001;
                                 """;
-            st.executeUpdate(query5);
+            if (!databaseExists) st.executeUpdate(query5);
 
             String query6 = """
                                 CREATE TABLE assign (
@@ -119,7 +115,7 @@ public class EnrollmentSystem {
                                     FOREIGN KEY (TID) REFERENCES teachers(tid)
                                 );
                                 """;
-            st.executeUpdate(query6);
+            if (!databaseExists) st.executeUpdate(query6);
 
             String query7 = """
                                 CREATE TABLE enroll (
@@ -133,7 +129,7 @@ public class EnrollmentSystem {
                                     FOREIGN KEY (subjid) REFERENCES subjects(subjid)
                                 );
                                 """;
-            st.executeUpdate(query7);
+            if (!databaseExists) st.executeUpdate(query7);
 
             String query8 = """
                                 CREATE TABLE grades (
@@ -147,7 +143,14 @@ public class EnrollmentSystem {
                                     FOREIGN KEY (enroll_eid) REFERENCES enroll(eid)
                                 );
                                 """;
-            st.executeUpdate(query8);
+            if (!databaseExists) st.executeUpdate(query8);
+
+            ensureScheduleProcedures();
+
+            if (databaseExists) {
+                db = oldDB;
+                return null;
+            }
 
             db = dbName;
 
@@ -163,7 +166,268 @@ public class EnrollmentSystem {
             return null;
         }
     }
-    
+
+    void ensureScheduleProcedures() throws java.sql.SQLException {
+        ensureScheduleProcedure("enroll_student_with_schedule_check", enrollmentProcedureSql());
+        ensureScheduleProcedure("assign_teacher_with_schedule_check", assignmentProcedureSql());
+    }
+
+    private void ensureScheduleProcedure(String procedureName, String createSql)
+            throws java.sql.SQLException {
+        String query = """
+                SELECT ROUTINE_COMMENT
+                FROM INFORMATION_SCHEMA.ROUTINES
+                WHERE ROUTINE_SCHEMA = DATABASE()
+                    AND ROUTINE_NAME = ?
+                    AND ROUTINE_TYPE = 'PROCEDURE'
+                """;
+        boolean procedureExists = false;
+        String routineComment = null;
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
+            pstmt.setString(1, procedureName);
+            try (ResultSet result = pstmt.executeQuery()) {
+                if (result.next()) {
+                    procedureExists = true;
+                    routineComment = result.getString("ROUTINE_COMMENT");
+                }
+            }
+        }
+
+        if (SCHEDULE_PROCEDURE_VERSION.equals(routineComment)) {
+            return;
+        }
+        if (procedureExists) {
+            st.executeUpdate("DROP PROCEDURE `" + procedureName + "`");
+        }
+        st.executeUpdate(createSql);
+    }
+
+    private String enrollmentProcedureSql() {
+        return """
+                CREATE PROCEDURE enroll_student_with_schedule_check(
+                    IN p_studid INT,
+                    IN p_subjid INT
+                )
+                COMMENT 'schedule-format-v2'
+                BEGIN
+                    DECLARE v_schedule VARCHAR(100);
+                    DECLARE v_days VARCHAR(3);
+                    DECLARE v_time_range VARCHAR(100);
+                    DECLARE v_start TIME;
+                    DECLARE v_end TIME;
+                    DECLARE v_conflict_schedule VARCHAR(100) DEFAULT NULL;
+                    DECLARE v_error_message VARCHAR(128);
+
+                    SELECT subjsched INTO v_schedule
+                    FROM subjects
+                    WHERE subjid = p_subjid;
+
+                    IF v_schedule IS NULL THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Error, subject schedule is missing.';
+                    END IF;
+
+                    SET v_days = UPPER(LEFT(TRIM(v_schedule), 3));
+                    SET v_time_range = TRIM(SUBSTRING(TRIM(v_schedule), 4));
+                    SET v_start = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
+                            '%h:%i%p'
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
+                            '%H:%i'
+                        ))
+                    END;
+                    SET v_end = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
+                            '%h:%i%p'
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
+                            '%H:%i'
+                        ))
+                    END;
+
+                    IF v_days NOT IN ('MWF', 'TTH')
+                        OR LOCATE('-', v_time_range) = 0
+                        OR v_start IS NULL
+                        OR v_end IS NULL
+                        OR v_start >= v_end THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT =
+                                'Error, invalid schedule. Use MWF or TTH followed by STARTTIME-ENDTIME.';
+                    END IF;
+
+                    SELECT s.subjsched INTO v_conflict_schedule
+                    FROM enroll e
+                    JOIN subjects s ON s.subjid = e.subjid
+                    WHERE e.studid = p_studid
+                        AND e.subjid <> p_subjid
+                        AND UPPER(SUBSTRING_INDEX(TRIM(s.subjsched), ' ', 1)) = v_days
+                        AND v_start < COALESCE(
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', -1
+                                ), ' ', ''),
+                                '%h:%i%p'
+                            )),
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', -1
+                                ), ' ', ''),
+                                '%H:%i'
+                            ))
+                        )
+                        AND v_end > COALESCE(
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', 1
+                                ), ' ', ''),
+                                '%h:%i%p'
+                            )),
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', 1
+                                ), ' ', ''),
+                                '%H:%i'
+                            ))
+                        )
+                    LIMIT 1;
+
+                    IF v_conflict_schedule IS NOT NULL THEN
+                        SET v_error_message =
+                            CONCAT('Error, Conflict with ', v_conflict_schedule);
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = v_error_message;
+                    END IF;
+
+                    INSERT INTO enroll(studid, subjid, evaluation)
+                    VALUES (p_studid, p_subjid, '');
+                END
+                """;
+    }
+
+    private String assignmentProcedureSql() {
+        return """
+                CREATE PROCEDURE assign_teacher_with_schedule_check(
+                    IN p_tid INT,
+                    IN p_subjid INT
+                )
+                COMMENT 'schedule-format-v2'
+                BEGIN
+                    DECLARE v_schedule VARCHAR(100);
+                    DECLARE v_days VARCHAR(3);
+                    DECLARE v_time_range VARCHAR(100);
+                    DECLARE v_start TIME;
+                    DECLARE v_end TIME;
+                    DECLARE v_conflict_schedule VARCHAR(100) DEFAULT NULL;
+                    DECLARE v_error_message VARCHAR(128);
+
+                    SELECT subjsched INTO v_schedule
+                    FROM subjects
+                    WHERE subjid = p_subjid;
+
+                    IF v_schedule IS NULL THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Error, subject schedule is missing.';
+                    END IF;
+
+                    SET v_days = UPPER(LEFT(TRIM(v_schedule), 3));
+                    SET v_time_range = TRIM(SUBSTRING(TRIM(v_schedule), 4));
+                    SET v_start = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
+                            '%h:%i%p'
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
+                            '%H:%i'
+                        ))
+                    END;
+                    SET v_end = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
+                            '%h:%i%p'
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
+                            '%H:%i'
+                        ))
+                    END;
+
+                    IF v_days NOT IN ('MWF', 'TTH')
+                        OR LOCATE('-', v_time_range) = 0
+                        OR v_start IS NULL
+                        OR v_end IS NULL
+                        OR v_start >= v_end THEN
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT =
+                                'Error, invalid schedule. Use MWF or TTH followed by STARTTIME-ENDTIME.';
+                    END IF;
+
+                    SELECT s.subjsched INTO v_conflict_schedule
+                    FROM assign a
+                    JOIN subjects s ON s.subjid = a.subjid
+                    WHERE a.tid = p_tid
+                        AND a.subjid <> p_subjid
+                        AND UPPER(SUBSTRING_INDEX(TRIM(s.subjsched), ' ', 1)) = v_days
+                        AND v_start < COALESCE(
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', -1
+                                ), ' ', ''),
+                                '%h:%i%p'
+                            )),
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', -1
+                                ), ' ', ''),
+                                '%H:%i'
+                            ))
+                        )
+                        AND v_end > COALESCE(
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', 1
+                                ), ' ', ''),
+                                '%h:%i%p'
+                            )),
+                            TIME(STR_TO_DATE(
+                                REPLACE(SUBSTRING_INDEX(
+                                    TRIM(SUBSTRING(TRIM(s.subjsched), 4)), '-', 1
+                                ), ' ', ''),
+                                '%H:%i'
+                            ))
+                        )
+                    LIMIT 1;
+
+                    IF v_conflict_schedule IS NOT NULL THEN
+                        SET v_error_message =
+                            CONCAT('Error, Conflict with ', v_conflict_schedule);
+                        SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = v_error_message;
+                    END IF;
+
+                    INSERT INTO assign(TID, SubjID)
+                    VALUES (p_tid, p_subjid);
+                END
+                """;
+    }
+
     public boolean createDatabaseUser(
             String id,
             String name,
@@ -191,25 +455,16 @@ public class EnrollmentSystem {
                 String grantStudent =
                         "GRANT SELECT ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'";
                 rootSt.executeUpdate(grantStudent);
-                
-                // FIX: Grant students permission to enroll and drop (INSERT and DELETE) 
-//                String grantStudentEnroll = 
-//                        "GRANT INSERT, DELETE ON `" + targetDB + "`.enroll TO '" + newUsername + "'@'localhost'";
-//                rootSt.executeUpdate(grantStudentEnroll);
-                
+                rootSt.executeUpdate(
+                        "GRANT EXECUTE ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'"
+                );
             } else if (role.equalsIgnoreCase("Teacher")) {
                 String grantTeacher =
                         "GRANT SELECT, INSERT, UPDATE ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'";
                 rootSt.executeUpdate(grantTeacher);
-                
-                // FIX: Grant teachers permission to drop their assignments
-//                String grantDeleteAssign =
-//                        "GRANT DELETE ON `" + targetDB + "`.assign TO '" + newUsername + "'@'localhost'";
-//                rootSt.executeUpdate(grantDeleteAssign);
-//                
-//                String grantDeleteEnroll =
-//                        "GRANT DELETE ON `" + targetDB + "`.enroll TO '" + newUsername + "'@'localhost'";
-//                rootSt.executeUpdate(grantDeleteEnroll);
+                rootSt.executeUpdate(
+                        "GRANT EXECUTE ON `" + targetDB + "`.* TO '" + newUsername + "'@'localhost'"
+                );
             }
 
             rootSt.executeUpdate("FLUSH PRIVILEGES");

@@ -91,6 +91,8 @@ public class TeachersForm extends javax.swing.JFrame {
      */
     public TeachersForm() {
         initComponents();
+        
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         DefaultTableModel tblmodel =
                 (DefaultTableModel) showsubjTable.getModel();
@@ -519,8 +521,13 @@ public class TeachersForm extends javax.swing.JFrame {
         
         if (i == JOptionPane.OK_OPTION) {
             String result = a.assignTchr(Integer.parseInt(tID.getText()));
-            if (result.equals("This subject is already assigned to a teacher.")) {
-                messagebox(result, "Assignment Failed");
+            if (result.startsWith("Error, ")) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        result,
+                        "Assignment Failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
             } else {
                 messagebox(result, "Success!!");
                 showAssignRec();

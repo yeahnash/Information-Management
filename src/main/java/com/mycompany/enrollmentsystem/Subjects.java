@@ -1,5 +1,7 @@
 package com.mycompany.enrollmentsystem;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Subjects {
     public void newsubject(String subjCode, String subjDesc, int subjUnits, String subjSched){
@@ -22,30 +24,56 @@ public class Subjects {
         }
     }
     
-    public void delete_subject(int subjID){
+    public boolean delete_subject(int subjID){
         EnrollmentSystem b = new EnrollmentSystem();
-        if (!b.DBConnect()) return;
+        if (!b.DBConnect()) return false;
         
-        try {
-            // Drop dependencies to satisfy Foreign Key constraints
-            try (PreparedStatement ps1 = b.con.prepareStatement("DELETE FROM assign WHERE SubjID = ?")) {
-                ps1.setInt(1, subjID);
-                ps1.executeUpdate();
-            }
-            try (PreparedStatement ps2 = b.con.prepareStatement("DELETE FROM enroll WHERE subjid = ?")) {
-                ps2.setInt(1, subjID);
-                ps2.executeUpdate();
-            }
-            
-            // Delete the subject
-            try (PreparedStatement ps3 = b.con.prepareStatement("DELETE FROM subjects WHERE subjid = ?")) {
-                ps3.setInt(1, subjID);
-                ps3.executeUpdate();
+        try (Connection connection = b.con) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM assign WHERE SubjID = ?")) {
+                    ps.setInt(1, subjID);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM grades WHERE enroll_eid IN "
+                                + "(SELECT eid FROM enroll WHERE subjid = ?)")) {
+                    ps.setInt(1, subjID);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM enroll WHERE subjid = ?")) {
+                    ps.setInt(1, subjID);
+                    ps.executeUpdate();
+                }
+
+                int rows;
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM subjects WHERE subjid = ?")) {
+                    ps.setInt(1, subjID);
+                    rows = ps.executeUpdate();
+                }
+                if (rows == 0) {
+                    connection.rollback();
+                    return false;
+                }
+
+                connection.commit();
                 System.out.println("Subject deleted successfully!");
+                return true;
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println("Not successful!");
             e.printStackTrace();
+            return false;
         }
     }
     

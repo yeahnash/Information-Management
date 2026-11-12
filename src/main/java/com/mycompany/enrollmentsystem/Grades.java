@@ -45,12 +45,27 @@ public class Grades {
     /**
      * Populates all grade ComboBoxes with standard grading options.
      */
-    public void setupGradeComboBoxes(JComboBox<String> prelim, JComboBox<String> midterm, JComboBox<String> prefinal, JComboBox<String> finalCmb) {
-        String[] gradeOptions = {"", "A", "B+", "B", "C+", "C", "D", "F", "FD"};
-        prelim.setModel(new DefaultComboBoxModel<>(gradeOptions));
-        midterm.setModel(new DefaultComboBoxModel<>(gradeOptions));
-        prefinal.setModel(new DefaultComboBoxModel<>(gradeOptions));
-        finalCmb.setModel(new DefaultComboBoxModel<>(gradeOptions));
+    public void setupGradeComboBoxes(
+            JComboBox<String> prelim,
+            JComboBox<String> midterm,
+            JComboBox<String> prefinal,
+            JComboBox<String> finalCmb) {
+
+        prelim.setModel(new DefaultComboBoxModel<>(
+                new String[]{"Prelim", "A", "B+", "B", "C+", "C", "D", "F", "FD"}
+        ));
+
+        midterm.setModel(new DefaultComboBoxModel<>(
+                new String[]{"Midterm", "A", "B+", "B", "C+", "C", "D", "F", "FD"}
+        ));
+
+        prefinal.setModel(new DefaultComboBoxModel<>(
+                new String[]{"Prefinal", "A", "B+", "B", "C+", "C", "D", "F", "FD"}
+        ));
+
+        finalCmb.setModel(new DefaultComboBoxModel<>(
+                new String[]{"Final", "A", "B+", "B", "C+", "C", "D", "F", "FD"}
+        ));
     }
 
     /**
@@ -169,6 +184,20 @@ public class Grades {
                     loadEnrolledStudentsAndGrades(gradesTbl, currentSubjId);
                 } else {
                     JOptionPane.showMessageDialog(parent, "Student enrollment record not found!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                
+                if (prelim.equals("Prelim")
+                        || midterm.equals("Midterm")
+                        || prefinal.equals("Prefinal")
+                        || fin.equals("Final")) {
+
+                    JOptionPane.showMessageDialog(
+                            parent,
+                            "Please select a grade for all grading periods.",
+                            "Incomplete Grades",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                    return;
                 }
 
             } catch (Exception e) {
