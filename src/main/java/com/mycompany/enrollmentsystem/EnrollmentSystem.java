@@ -17,6 +17,8 @@ import java.util.Calendar;
 
 public class EnrollmentSystem {
 
+    private static final String SCHEDULE_PROCEDURE_VERSION = "schedule-format-v2";
+
     Connection con;
     Statement st;
     public ResultSet rs;
@@ -166,12 +168,38 @@ public class EnrollmentSystem {
     }
 
     void ensureScheduleProcedures() throws java.sql.SQLException {
-        if (!procedureExists("enroll_student_with_schedule_check")) {
-            st.executeUpdate(enrollmentProcedureSql());
+        ensureScheduleProcedure("enroll_student_with_schedule_check", enrollmentProcedureSql());
+        ensureScheduleProcedure("assign_teacher_with_schedule_check", assignmentProcedureSql());
+    }
+
+    private void ensureScheduleProcedure(String procedureName, String createSql)
+            throws java.sql.SQLException {
+        String query = """
+                SELECT ROUTINE_COMMENT
+                FROM INFORMATION_SCHEMA.ROUTINES
+                WHERE ROUTINE_SCHEMA = DATABASE()
+                    AND ROUTINE_NAME = ?
+                    AND ROUTINE_TYPE = 'PROCEDURE'
+                """;
+        boolean procedureExists = false;
+        String routineComment = null;
+        try (PreparedStatement pstmt = con.prepareStatement(query)) {
+            pstmt.setString(1, procedureName);
+            try (ResultSet result = pstmt.executeQuery()) {
+                if (result.next()) {
+                    procedureExists = true;
+                    routineComment = result.getString("ROUTINE_COMMENT");
+                }
+            }
         }
-        if (!procedureExists("assign_teacher_with_schedule_check")) {
-            st.executeUpdate(assignmentProcedureSql());
+
+        if (SCHEDULE_PROCEDURE_VERSION.equals(routineComment)) {
+            return;
         }
+        if (procedureExists) {
+            st.executeUpdate("DROP PROCEDURE `" + procedureName + "`");
+        }
+        st.executeUpdate(createSql);
     }
 
     private String enrollmentProcedureSql() {
@@ -180,6 +208,7 @@ public class EnrollmentSystem {
                     IN p_studid INT,
                     IN p_subjid INT
                 )
+                COMMENT 'schedule-format-v2'
                 BEGIN
                     DECLARE v_schedule VARCHAR(100);
                     DECLARE v_days VARCHAR(3);
@@ -200,26 +229,32 @@ public class EnrollmentSystem {
 
                     SET v_days = UPPER(LEFT(TRIM(v_schedule), 3));
                     SET v_time_range = TRIM(SUBSTRING(TRIM(v_schedule), 4));
-                    SET v_start = COALESCE(
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''),
+                    SET v_start = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
                             '%h:%i%p'
-                        )),
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''),
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
                             '%H:%i'
                         ))
-                    );
-                    SET v_end = COALESCE(
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''),
+                    END;
+                    SET v_end = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
                             '%h:%i%p'
-                        )),
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''),
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
                             '%H:%i'
                         ))
-                    );
+                    END;
 
                     IF v_days NOT IN ('MWF', 'TTH')
                         OR LOCATE('-', v_time_range) = 0
@@ -236,7 +271,7 @@ public class EnrollmentSystem {
                     JOIN subjects s ON s.subjid = e.subjid
                     WHERE e.studid = p_studid
                         AND e.subjid <> p_subjid
-                        AND UPPER(LEFT(TRIM(s.subjsched), 3)) = v_days
+                        AND UPPER(SUBSTRING_INDEX(TRIM(s.subjsched), ' ', 1)) = v_days
                         AND v_start < COALESCE(
                             TIME(STR_TO_DATE(
                                 REPLACE(SUBSTRING_INDEX(
@@ -286,6 +321,7 @@ public class EnrollmentSystem {
                     IN p_tid INT,
                     IN p_subjid INT
                 )
+                COMMENT 'schedule-format-v2'
                 BEGIN
                     DECLARE v_schedule VARCHAR(100);
                     DECLARE v_days VARCHAR(3);
@@ -306,26 +342,32 @@ public class EnrollmentSystem {
 
                     SET v_days = UPPER(LEFT(TRIM(v_schedule), 3));
                     SET v_time_range = TRIM(SUBSTRING(TRIM(v_schedule), 4));
-                    SET v_start = COALESCE(
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''),
+                    SET v_start = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
                             '%h:%i%p'
-                        )),
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', ''),
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', 1), ' ', '')),
                             '%H:%i'
                         ))
-                    );
-                    SET v_end = COALESCE(
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''),
+                    END;
+                    SET v_end = CASE
+                        WHEN RIGHT(UPPER(REPLACE(
+                            SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''
+                        )), 2) IN ('AM', 'PM')
+                        THEN TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
                             '%h:%i%p'
-                        )),
-                        TIME(STR_TO_DATE(
-                            REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', ''),
+                        ))
+                        ELSE TIME(STR_TO_DATE(
+                            UPPER(REPLACE(SUBSTRING_INDEX(v_time_range, '-', -1), ' ', '')),
                             '%H:%i'
                         ))
-                    );
+                    END;
 
                     IF v_days NOT IN ('MWF', 'TTH')
                         OR LOCATE('-', v_time_range) = 0
@@ -342,7 +384,7 @@ public class EnrollmentSystem {
                     JOIN subjects s ON s.subjid = a.subjid
                     WHERE a.tid = p_tid
                         AND a.subjid <> p_subjid
-                        AND UPPER(LEFT(TRIM(s.subjsched), 3)) = v_days
+                        AND UPPER(SUBSTRING_INDEX(TRIM(s.subjsched), ' ', 1)) = v_days
                         AND v_start < COALESCE(
                             TIME(STR_TO_DATE(
                                 REPLACE(SUBSTRING_INDEX(
@@ -386,22 +428,6 @@ public class EnrollmentSystem {
                 """;
     }
 
-    private boolean procedureExists(String procedureName) throws java.sql.SQLException {
-        String query = """
-                SELECT 1
-                FROM INFORMATION_SCHEMA.ROUTINES
-                WHERE ROUTINE_SCHEMA = DATABASE()
-                    AND ROUTINE_NAME = ?
-                    AND ROUTINE_TYPE = 'PROCEDURE'
-                """;
-        try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setString(1, procedureName);
-            try (ResultSet result = pstmt.executeQuery()) {
-                return result.next();
-            }
-        }
-    }
-    
     public boolean createDatabaseUser(
             String id,
             String name,

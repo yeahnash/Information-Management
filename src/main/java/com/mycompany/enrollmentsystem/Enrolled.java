@@ -1,5 +1,6 @@
 package com.mycompany.enrollmentsystem;
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -45,20 +46,43 @@ public class Enrolled extends EnrollmentSystem {
     }
 
     public String dropSubject(int studID) {
-        if (!DBConnect()) return "Database connection failed";
-        String query = "DELETE FROM enroll WHERE studID = ? AND subjID = ?";
-        try (PreparedStatement pstmt = con.prepareStatement(query)) {
-            pstmt.setInt(1, studID);
-            pstmt.setInt(2, subjID);
-            int rows = pstmt.executeUpdate();
-            if (rows > 0) {
+        if (!DBConnect()) return "Drop Failed: database connection failed.";
+        try (Connection connection = con) {
+            connection.setAutoCommit(false);
+            try {
+                String deleteGrades = "DELETE FROM grades WHERE enroll_eid IN "
+                        + "(SELECT eid FROM enroll WHERE studid = ? AND subjid = ?)";
+                try (PreparedStatement pstmt = connection.prepareStatement(deleteGrades)) {
+                    pstmt.setInt(1, studID);
+                    pstmt.setInt(2, subjID);
+                    pstmt.executeUpdate();
+                }
+
+                String deleteEnrollment = "DELETE FROM enroll WHERE studid = ? AND subjid = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(deleteEnrollment)) {
+                    pstmt.setInt(1, studID);
+                    pstmt.setInt(2, subjID);
+                    int rows = pstmt.executeUpdate();
+                    if (rows == 0) {
+                        connection.rollback();
+                        return "Student is not Enrolled in this subject.";
+                    }
+                }
+
+                connection.commit();
                 return "Subject " + subjID + " dropped from student " + studID;
-            } else {
-                return "Student is not Enrolled in this subject.";
+            } catch (SQLException e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println("Failed to drop subject " + e);
-            return "Drop Failed";
+            e.printStackTrace();
+            return "Drop Failed: " + e.getMessage();
         }
     }
 }

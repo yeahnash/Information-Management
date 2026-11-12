@@ -555,7 +555,7 @@ public class StudentsForm extends javax.swing.JFrame {
         a.setsubjID(subjectID);
         String result = a.dropSubject(Integer.parseInt(stdID));
         
-        if (result.equals("Drop Failed")) {
+        if (result.startsWith("Drop Failed")) {
             messagebox(result, "Drop Failed");
         } else if (result.equals("Student is not Enrolled in this subject.")) {
             messagebox(result, "Drop Failed");
